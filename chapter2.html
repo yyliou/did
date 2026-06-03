@@ -1,0 +1,1226 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml" lang="en" xml:lang="en"><head>
+
+<meta charset="utf-8">
+<meta name="generator" content="quarto-1.9.37">
+
+<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
+
+
+<title>2&nbsp; Identification: Assumptions, Violations, and Tests – DiD Notes</title>
+<style>
+/* Default styles provided by pandoc.
+** See https://pandoc.org/MANUAL.html#variables-for-html for config info.
+*/
+code{white-space: pre-wrap;}
+span.smallcaps{font-variant: small-caps;}
+div.columns{display: flex; gap: min(4vw, 1.5em);}
+div.column{flex: auto; overflow-x: auto;}
+div.hanging-indent{margin-left: 1.5em; text-indent: -1.5em;}
+ul.task-list{list-style: none;}
+ul.task-list li input[type="checkbox"] {
+  width: 0.8em;
+  margin: 0 0.8em 0.2em -1em; /* quarto-specific, see https://github.com/quarto-dev/quarto-cli/issues/4556 */ 
+  vertical-align: middle;
+}
+/* CSS for syntax highlighting */
+html { -webkit-text-size-adjust: 100%; }
+pre > code.sourceCode { white-space: pre; position: relative; }
+pre > code.sourceCode > span { display: inline-block; line-height: 1.25; }
+pre > code.sourceCode > span:empty { height: 1.2em; }
+.sourceCode { overflow: visible; }
+code.sourceCode > span { color: inherit; text-decoration: inherit; }
+div.sourceCode { margin: 1em 0; }
+pre.sourceCode { margin: 0; }
+@media screen {
+div.sourceCode { overflow: auto; }
+}
+@media print {
+pre > code.sourceCode { white-space: pre-wrap; }
+pre > code.sourceCode > span { text-indent: -5em; padding-left: 5em; }
+}
+pre.numberSource code
+  { counter-reset: source-line 0; }
+pre.numberSource code > span
+  { position: relative; left: -4em; counter-increment: source-line; }
+pre.numberSource code > span > a:first-child::before
+  { content: counter(source-line);
+    position: relative; left: -1em; text-align: right; vertical-align: baseline;
+    border: none; display: inline-block;
+    -webkit-touch-callout: none; -webkit-user-select: none;
+    -khtml-user-select: none; -moz-user-select: none;
+    -ms-user-select: none; user-select: none;
+    padding: 0 4px; width: 4em;
+  }
+pre.numberSource { margin-left: 3em;  padding-left: 4px; }
+div.sourceCode
+  {   }
+@media screen {
+pre > code.sourceCode > span > a:first-child::before { text-decoration: underline; }
+}
+/* CSS for citations */
+div.csl-bib-body { }
+div.csl-entry {
+  clear: both;
+  margin-bottom: 0em;
+}
+.hanging-indent div.csl-entry {
+  margin-left:2em;
+  text-indent:-2em;
+}
+div.csl-left-margin {
+  min-width:2em;
+  float:left;
+}
+div.csl-right-inline {
+  margin-left:2em;
+  padding-left:1em;
+}
+div.csl-indent {
+  margin-left: 2em;
+}</style>
+
+
+<script src="site_libs/quarto-nav/quarto-nav.js"></script>
+<script src="site_libs/quarto-nav/headroom.min.js"></script>
+<script src="site_libs/clipboard/clipboard.min.js"></script>
+<script src="site_libs/quarto-search/autocomplete.umd.js"></script>
+<script src="site_libs/quarto-search/fuse.min.js"></script>
+<script src="site_libs/quarto-search/quarto-search.js"></script>
+<meta name="quarto:offset" content="./">
+<link href="./chapter3.html" rel="next">
+<link href="./intro.html" rel="prev">
+<script src="site_libs/quarto-html/quarto.js" type="module"></script>
+<script src="site_libs/quarto-html/tabsets/tabsets.js" type="module"></script>
+<script src="site_libs/quarto-html/popper.min.js"></script>
+<script src="site_libs/quarto-html/tippy.umd.min.js"></script>
+<script src="site_libs/quarto-html/anchor.min.js"></script>
+<link href="site_libs/quarto-html/tippy.css" rel="stylesheet">
+<link href="site_libs/quarto-html/quarto-syntax-highlighting-7f8f88aac4f3542376d5c11b86a4c14d.css" rel="stylesheet" id="quarto-text-highlighting-styles">
+<script src="site_libs/bootstrap/bootstrap.min.js"></script>
+<link href="site_libs/bootstrap/bootstrap-icons.css" rel="stylesheet">
+<link href="site_libs/bootstrap/bootstrap-5ccb035bea26c1e21f80f44cf7c27909.min.css" rel="stylesheet" append-hash="true" id="quarto-bootstrap" data-mode="light">
+<script id="quarto-search-options" type="application/json">{
+  "location": "sidebar",
+  "copy-button": false,
+  "collapse-after": 3,
+  "panel-placement": "start",
+  "type": "textbox",
+  "limit": 50,
+  "keyboard-shortcut": [
+    "f",
+    "/",
+    "s"
+  ],
+  "show-item-context": false,
+  "language": {
+    "search-no-results-text": "No results",
+    "search-matching-documents-text": "matching documents",
+    "search-copy-link-title": "Copy link to search",
+    "search-hide-matches-text": "Hide additional matches",
+    "search-more-match-text": "more match in this document",
+    "search-more-matches-text": "more matches in this document",
+    "search-clear-button-title": "Clear",
+    "search-text-placeholder": "",
+    "search-detached-cancel-button-title": "Cancel",
+    "search-submit-button-title": "Submit",
+    "search-label": "Search"
+  }
+}</script>
+
+  <script src="https://cdnjs.cloudflare.com/polyfill/v3/polyfill.min.js?features=es6"></script>
+  <script defer="" src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-chtml-full.js" type="text/javascript"></script>
+
+<script type="text/javascript">
+const typesetMath = (el) => {
+  if (window.MathJax) {
+    // MathJax Typeset
+    window.MathJax.typeset([el]);
+  } else if (window.katex) {
+    // KaTeX Render
+    var mathElements = el.getElementsByClassName("math");
+    var macros = [];
+    for (var i = 0; i < mathElements.length; i++) {
+      var texText = mathElements[i].firstChild;
+      if (mathElements[i].tagName == "SPAN" && texText && texText.data) {
+        window.katex.render(texText.data, mathElements[i], {
+          displayMode: mathElements[i].classList.contains('display'),
+          throwOnError: false,
+          macros: macros,
+          fleqn: false
+        });
+      }
+    }
+  }
+}
+window.Quarto = {
+  typesetMath
+};
+</script>
+
+</head>
+
+<body class="nav-sidebar floating quarto-light">
+
+<div id="quarto-search-results"></div>
+  <header id="quarto-header" class="headroom fixed-top">
+  <nav class="quarto-secondary-nav">
+    <div class="container-fluid d-flex">
+      <button type="button" class="quarto-btn-toggle btn" data-bs-toggle="collapse" role="button" data-bs-target=".quarto-sidebar-collapse-item" aria-controls="quarto-sidebar" aria-expanded="false" aria-label="Toggle sidebar navigation" onclick="if (window.quartoToggleHeadroom) { window.quartoToggleHeadroom(); }">
+        <i class="bi bi-layout-text-sidebar-reverse"></i>
+      </button>
+        <nav class="quarto-page-breadcrumbs" aria-label="breadcrumb"><ol class="breadcrumb"><li class="breadcrumb-item"><a href="./chapter2.html">Part II — Identification Assumptions</a></li><li class="breadcrumb-item"><a href="./chapter2.html"><span class="chapter-number">2</span>&nbsp; <span class="chapter-title">Identification: Assumptions, Violations, and Tests</span></a></li></ol></nav>
+        <a class="flex-grow-1" role="navigation" data-bs-toggle="collapse" data-bs-target=".quarto-sidebar-collapse-item" aria-controls="quarto-sidebar" aria-expanded="false" aria-label="Toggle sidebar navigation" onclick="if (window.quartoToggleHeadroom) { window.quartoToggleHeadroom(); }">      
+        </a>
+      <button type="button" class="btn quarto-search-button" aria-label="Search" onclick="window.quartoOpenSearch();">
+        <i class="bi bi-search"></i>
+      </button>
+    </div>
+  </nav>
+</header>
+<!-- content -->
+<div id="quarto-content" class="quarto-container page-columns page-rows-contents page-layout-article">
+<!-- sidebar -->
+  <nav id="quarto-sidebar" class="sidebar collapse collapse-horizontal quarto-sidebar-collapse-item sidebar-navigation floating overflow-auto">
+    <div class="pt-lg-2 mt-2 text-left sidebar-header">
+    <div class="sidebar-title mb-0 py-0">
+      <a href="./">DiD Notes</a> 
+        <div class="sidebar-tools-main">
+    <a href="https://github.com/yyliou" title="Source Code" class="quarto-navigation-tool px-1" aria-label="Source Code"><i class="bi bi-github"></i></a>
+    <a href="./DiD-Notes.pdf" title="Download PDF" class="quarto-navigation-tool px-1" aria-label="Download PDF"><i class="bi bi-file-pdf"></i></a>
+</div>
+    </div>
+      </div>
+        <div class="mt-2 flex-shrink-0 align-items-center">
+        <div class="sidebar-search">
+        <div id="quarto-search" class="" title="Search"></div>
+        </div>
+        </div>
+    <div class="sidebar-menu-container"> 
+    <ul class="list-unstyled mt-1">
+        <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./index.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">Preface</span></a>
+  </div>
+</li>
+        <li class="sidebar-item sidebar-item-section">
+      <div class="sidebar-item-container"> 
+            <a class="sidebar-item-text sidebar-link text-start" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-1" role="navigation" aria-expanded="true">
+ <span class="menu-text">Part I — Introduction</span></a>
+          <a class="sidebar-item-toggle text-start" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-1" role="navigation" aria-expanded="true" aria-label="Toggle section">
+            <i class="bi bi-chevron-right ms-2"></i>
+          </a> 
+      </div>
+      <ul id="quarto-sidebar-section-1" class="collapse list-unstyled sidebar-section depth1 show">  
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./intro.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text"><span class="chapter-number">1</span>&nbsp; <span class="chapter-title">Introduction</span></span></a>
+  </div>
+</li>
+      </ul>
+  </li>
+        <li class="sidebar-item sidebar-item-section">
+      <div class="sidebar-item-container"> 
+            <a class="sidebar-item-text sidebar-link text-start" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-2" role="navigation" aria-expanded="true">
+ <span class="menu-text">Part II — Identification Assumptions</span></a>
+          <a class="sidebar-item-toggle text-start" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-2" role="navigation" aria-expanded="true" aria-label="Toggle section">
+            <i class="bi bi-chevron-right ms-2"></i>
+          </a> 
+      </div>
+      <ul id="quarto-sidebar-section-2" class="collapse list-unstyled sidebar-section depth1 show">  
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./chapter2.html" class="sidebar-item-text sidebar-link active">
+ <span class="menu-text"><span class="chapter-number">2</span>&nbsp; <span class="chapter-title">Identification: Assumptions, Violations, and Tests</span></span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./chapter3.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text"><span class="chapter-number">3</span>&nbsp; <span class="chapter-title">Covariate Adjustment: IPW and Doubly Robust DiD</span></span></a>
+  </div>
+</li>
+      </ul>
+  </li>
+        <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./references.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">References</span></a>
+  </div>
+</li>
+    </ul>
+    </div>
+</nav>
+<div id="quarto-sidebar-glass" class="quarto-sidebar-collapse-item" data-bs-toggle="collapse" data-bs-target=".quarto-sidebar-collapse-item"></div>
+<!-- margin-sidebar -->
+    <div id="quarto-margin-sidebar" class="sidebar margin-sidebar">
+        <nav id="TOC" role="doc-toc" class="toc-active">
+    <h2 id="toc-title">Table of contents</h2>
+   
+  <ul>
+  <li><a href="#sec-pta" id="toc-sec-pta" class="nav-link active" data-scroll-target="#sec-pta"><span class="header-section-number">2.1</span> The Parallel Trends Assumption</a>
+  <ul class="collapse">
+  <li><a href="#formal-statement" id="toc-formal-statement" class="nav-link" data-scroll-target="#formal-statement"><span class="header-section-number">2.1.1</span> Formal Statement</a></li>
+  <li><a href="#consequences-of-a-pta-violation" id="toc-consequences-of-a-pta-violation" class="nav-link" data-scroll-target="#consequences-of-a-pta-violation"><span class="header-section-number">2.1.2</span> Consequences of a PTA Violation</a></li>
+  <li><a href="#conditional-parallel-trends" id="toc-conditional-parallel-trends" class="nav-link" data-scroll-target="#conditional-parallel-trends"><span class="header-section-number">2.1.3</span> Conditional Parallel Trends</a></li>
+  </ul></li>
+  <li><a href="#sec-no-anticipation" id="toc-sec-no-anticipation" class="nav-link" data-scroll-target="#sec-no-anticipation"><span class="header-section-number">2.2</span> The No-Anticipation Assumption</a>
+  <ul class="collapse">
+  <li><a href="#formal-statement-1" id="toc-formal-statement-1" class="nav-link" data-scroll-target="#formal-statement-1"><span class="header-section-number">2.2.1</span> Formal Statement</a></li>
+  <li><a href="#consequences-of-a-violation" id="toc-consequences-of-a-violation" class="nav-link" data-scroll-target="#consequences-of-a-violation"><span class="header-section-number">2.2.2</span> Consequences of a Violation</a></li>
+  </ul></li>
+  <li><a href="#sec-natural-exp" id="toc-sec-natural-exp" class="nav-link" data-scroll-target="#sec-natural-exp"><span class="header-section-number">2.3</span> Natural Experiments and As-Good-As-Random Assignment</a>
+  <ul class="collapse">
+  <li><a href="#definition-and-logic" id="toc-definition-and-logic" class="nav-link" data-scroll-target="#definition-and-logic"><span class="header-section-number">2.3.1</span> Definition and Logic</a></li>
+  <li><a href="#what-natural-experiments-do-not-deliver" id="toc-what-natural-experiments-do-not-deliver" class="nav-link" data-scroll-target="#what-natural-experiments-do-not-deliver"><span class="header-section-number">2.3.2</span> What Natural Experiments Do Not Deliver</a></li>
+  </ul></li>
+  <li><a href="#sec-testing" id="toc-sec-testing" class="nav-link" data-scroll-target="#sec-testing"><span class="header-section-number">2.4</span> Testing the Identification Assumptions</a>
+  <ul class="collapse">
+  <li><a href="#sec-visual" id="toc-sec-visual" class="nav-link" data-scroll-target="#sec-visual"><span class="header-section-number">2.4.1</span> Graphical Inspection of Pre-Treatment Trends</a></li>
+  <li><a href="#sec-event-study" id="toc-sec-event-study" class="nav-link" data-scroll-target="#sec-event-study"><span class="header-section-number">2.4.2</span> Event Study Design</a></li>
+  <li><a href="#sec-roth" id="toc-sec-roth" class="nav-link" data-scroll-target="#sec-roth"><span class="header-section-number">2.4.3</span> Roth’s Critique of Event-Study Pre-Testing</a></li>
+  <li><a href="#sec-placebo" id="toc-sec-placebo" class="nav-link" data-scroll-target="#sec-placebo"><span class="header-section-number">2.4.4</span> Placebo Tests</a></li>
+  <li><a href="#sec-sensitivity" id="toc-sec-sensitivity" class="nav-link" data-scroll-target="#sec-sensitivity"><span class="header-section-number">2.4.5</span> Sensitivity Analysis: The HonestDiD Approach</a></li>
+  </ul></li>
+  </ul>
+</nav>
+    </div>
+<!-- main -->
+<main class="content" id="quarto-document-content">
+
+<header id="title-block-header" class="quarto-title-block default"><nav class="quarto-page-breadcrumbs quarto-title-breadcrumbs d-none d-lg-block" aria-label="breadcrumb"><ol class="breadcrumb"><li class="breadcrumb-item"><a href="./chapter2.html">Part II — Identification Assumptions</a></li><li class="breadcrumb-item"><a href="./chapter2.html"><span class="chapter-number">2</span>&nbsp; <span class="chapter-title">Identification: Assumptions, Violations, and Tests</span></a></li></ol></nav>
+<div class="quarto-title">
+<h1 class="title"><span id="sec-identification" class="quarto-section-identifier"><span class="chapter-number">2</span>&nbsp; <span class="chapter-title">Identification: Assumptions, Violations, and Tests</span></span></h1>
+</div>
+
+
+
+<div class="quarto-title-meta">
+
+    
+  
+    
+  </div>
+  
+
+
+</header>
+
+
+<p><a href="intro.html" class="quarto-xref"><span>Chapter 1</span></a> established that the DiD estimator recovers the ATT under three conditions: the parallel trends assumption (PTA), no anticipation, and SUTVA. That chapter stated these conditions to prove identification. This chapter deepens the analysis along four dimensions. First, it re-derives each assumption at greater precision, making explicit what mathematical content each restriction actually imposes on unobservables. Second, it derives the bias formula that results when each assumption fails, showing how the sign and magnitude of the failure translate into distortion of the DiD estimate. Third, it examines the special case of <em>natural experiments</em> and explains what “as-good-as-random” assignment does and does not deliver for identification. Fourth, it surveys the main empirical strategies for probing validity: graphical pre-trend inspection, the event-study regression, placebo tests (following the framework of <span class="citation" data-cites="eggers2024">Eggers et al. (<a href="references.html#ref-eggers2024" role="doc-biblioref">2024</a>)</span>), and a sensitivity-analysis approach robust to the pre-testing critique of <span class="citation" data-cites="roth2022">Roth (<a href="references.html#ref-roth2022" role="doc-biblioref">2022</a>)</span>.</p>
+<hr>
+<section id="sec-pta" class="level2" data-number="2.1">
+<h2 data-number="2.1" class="anchored" data-anchor-id="sec-pta"><span class="header-section-number">2.1</span> The Parallel Trends Assumption</h2>
+<section id="formal-statement" class="level3" data-number="2.1.1">
+<h3 data-number="2.1.1" class="anchored" data-anchor-id="formal-statement"><span class="header-section-number">2.1.1</span> Formal Statement</h3>
+<p>Maintain the potential-outcomes notation of <a href="intro.html" class="quarto-xref"><span>Chapter 1</span></a>: <span class="math inline">\(Y_{it}(d)\)</span> is the potential outcome of unit <span class="math inline">\(i\)</span> at time <span class="math inline">\(t\)</span> under treatment <span class="math inline">\(d \in \{0,1\}\)</span>; <span class="math inline">\(D_i\)</span> is a time-invariant treatment indicator; <span class="math inline">\(g_i\)</span> is the first treatment period. The <strong>parallel trends assumption</strong> restricts the counterfactual trend of the treated group:</p>
+<p><span class="math display">\[\mathbb{E}\!\left[Y_{i,1}(0) - Y_{i,0}(0)\,\middle|\, D_i = 1\right]
+= \mathbb{E}\!\left[Y_{i,1}(0) - Y_{i,0}(0)\,\middle|\, D_i = 0\right].
+\tag{2.1}\]</span></p>
+<p>Equation (2.1) is a claim about a <strong>counterfactual</strong>: <span class="math inline">\(Y_{i,1}(0) \mid D_i = 1\)</span> — the outcome a treated unit would have recorded in the post-period had it not been treated — is never observed. The PTA does <em>not</em> require pre-treatment outcome levels to be equal, nor does it require the treated and control groups to be comparable in any observable dimension. It only restricts one specific unobservable moment: the <em>change</em> in counterfactual outcomes across time for the treated group must equal the <em>change</em> observed for the control group.</p>
+<p>In a multi-period panel with <span class="math inline">\(T\)</span> pre-treatment periods (<span class="math inline">\(t &lt; g_i\)</span>), the assumption generalises to:</p>
+<p><span class="math display">\[\mathbb{E}\!\left[Y_{i,t}(0) - Y_{i,s}(0)\,\middle|\, D_i = 1\right]
+= \mathbb{E}\!\left[Y_{i,t}(0) - Y_{i,s}(0)\,\middle|\, D_i = 0\right]
+\qquad \forall\; s &lt; t &lt; g_i, \tag{2.2}\]</span></p>
+<p>requiring that the <strong>entire counterfactual trajectory</strong> is parallel across groups in the pre-treatment window, not just the immediate one-period change. Violations of (2.2) that manifest gradually — a slowly diverging pre-trend — are particularly difficult to detect with short panels, as discussed in Section <a href="#sec-roth" class="quarto-xref"><span>Section 2.4.3</span></a>.</p>
+</section>
+<section id="consequences-of-a-pta-violation" class="level3" data-number="2.1.2">
+<h3 data-number="2.1.2" class="anchored" data-anchor-id="consequences-of-a-pta-violation"><span class="header-section-number">2.1.2</span> Consequences of a PTA Violation</h3>
+<p>Define the <strong>differential trend</strong>:</p>
+<p><span class="math display">\[\mu \;\equiv\;
+\mathbb{E}[Y_{i,1}(0)-Y_{i,0}(0)\mid D_i=1]
+\;-\;
+\mathbb{E}[Y_{i,1}(0)-Y_{i,0}(0)\mid D_i=0]. \tag{2.3}\]</span></p>
+<p>The PTA requires <span class="math inline">\(\mu = 0\)</span>. When <span class="math inline">\(\mu \neq 0\)</span>, the DiD estimand equals:</p>
+<p><span class="math display">\[\underbrace{\hat\delta^{\text{DiD}}}_{\text{observed}}
+= \underbrace{\text{ATT}}_{\text{target}}
+\;+\; \underbrace{\mu}_{\text{bias}}. \tag{2.4}\]</span></p>
+<div class="callout callout-style-default callout-note callout-titled">
+<div class="callout-header d-flex align-content-center">
+<div class="callout-icon-container">
+<i class="callout-icon"></i>
+</div>
+<div class="callout-title-container flex-fill">
+Note
+</div>
+</div>
+<div class="callout-body-container callout-body">
+<p><strong>Proposition 2.1 (Bias Under PTA Failure).</strong> <em>Suppose no-anticipation (2.9) holds but PTA fails so that</em> <span class="math inline">\(\mu \neq 0\)</span>. Then</p>
+<p><span class="math display">\[\operatorname{plim}\;\hat\delta^{\text{DiD}} = \text{ATT} + \mu.\]</span></p>
+</div>
+</div>
+<p><em>Proof.</em> By no-anticipation, the pre-period outcomes of the treated group are clean: <span class="math inline">\(Y_{i,0}^{\text{obs}} = Y_{i,0}(0)\)</span> for <span class="math inline">\(D_i = 1\)</span>. The DiD estimand is therefore:</p>
+<p><span class="math display">\[\begin{aligned}
+\hat\delta^{\text{DiD}}
+&amp;= \underbrace{\mathbb{E}[Y_{i,1}(1) - Y_{i,0}(0)\mid D_i=1]}_{\text{treated change}}
+- \underbrace{\mathbb{E}[Y_{i,1}(0) - Y_{i,0}(0)\mid D_i=0]}_{\text{control change}} \\
+&amp;= \mathbb{E}[Y_{i,1}(1) - Y_{i,1}(0)\mid D_i=1]
++ \underbrace{\mathbb{E}[Y_{i,1}(0) - Y_{i,0}(0)\mid D_i=1]
+- \mathbb{E}[Y_{i,1}(0) - Y_{i,0}(0)\mid D_i=0]}_{\mu} \\
+&amp;= \text{ATT} + \mu. \qquad\square
+\end{aligned}\]</span></p>
+<p>The direction of bias is determined by <span class="math inline">\(\operatorname{sign}(\mu)\)</span>. If the treated group would have grown faster absent treatment (<span class="math inline">\(\mu &gt; 0\)</span>), DiD overstates the ATT. If it would have grown more slowly (<span class="math inline">\(\mu &lt; 0\)</span>), DiD understates it. The magnitude of bias is entirely determined by the counterfactual differential trend — a quantity that is, in principle, unobservable.</p>
+</section>
+<section id="conditional-parallel-trends" class="level3" data-number="2.1.3">
+<h3 data-number="2.1.3" class="anchored" data-anchor-id="conditional-parallel-trends"><span class="header-section-number">2.1.3</span> Conditional Parallel Trends</h3>
+<p>When unconditional PTA (2.1) is implausible — for instance, when treated and control units differ systematically on observables that predict differential growth — a weaker <strong>conditional</strong> form may be defensible <span class="citation" data-cites="abadie2005">(<a href="references.html#ref-abadie2005" role="doc-biblioref">Abadie, 2005</a>)</span>:</p>
+<p><span class="math display">\[\mathbb{E}\!\left[Y_{i,1}(0)-Y_{i,0}(0)\,\middle|\, D_i=1,\,\mathbf{X}_i\right]
+= \mathbb{E}\!\left[Y_{i,1}(0)-Y_{i,0}(0)\,\middle|\, D_i=0,\,\mathbf{X}_i\right], \tag{2.5}\]</span></p>
+<p>where <span class="math inline">\(\mathbf{X}_i\)</span> is a vector of pre-treatment covariates. Assumption (2.5) is strictly weaker than (2.1): it requires only that counterfactual trends are equal <em>within cells defined by</em> <span class="math inline">\(\mathbf{X}_i\)</span>, not marginally. Conditional PTA is the foundation of doubly-robust DiD estimators <span class="citation" data-cites="santanna2020">(<a href="references.html#ref-santanna2020" role="doc-biblioref">Sant’Anna &amp; Zhao, 2020</a>)</span> and of inverse-probability-weighted DiD <span class="citation" data-cites="abadie2005">(<a href="references.html#ref-abadie2005" role="doc-biblioref">Abadie, 2005</a>)</span>, where <span class="math inline">\(\mathbf{X}_i\)</span>-stratified trend homogeneity replaces unconditional parallelism. The cost is that identification now rests on the correctness of the propensity-score or outcome model for <span class="math inline">\(\mathbf{X}_i\)</span>.</p>
+<hr>
+</section>
+</section>
+<section id="sec-no-anticipation" class="level2" data-number="2.2">
+<h2 data-number="2.2" class="anchored" data-anchor-id="sec-no-anticipation"><span class="header-section-number">2.2</span> The No-Anticipation Assumption</h2>
+<section id="formal-statement-1" class="level3" data-number="2.2.1">
+<h3 data-number="2.2.1" class="anchored" data-anchor-id="formal-statement-1"><span class="header-section-number">2.2.1</span> Formal Statement</h3>
+<p>The <strong>no-anticipation condition</strong> requires that the potential outcomes of any unit in the pre-treatment periods are unaffected by the treatment it will receive in the future:</p>
+<p><span class="math display">\[Y_{i,t}(d) = Y_{i,t}(0)
+\qquad \forall\; t &lt; g_i,\quad d \in \{0,1\}. \tag{2.6}\]</span></p>
+<p>Equation (2.6) says that, before treatment begins, the potential outcome under treatment <span class="math inline">\(d = 1\)</span> coincides with the counterfactual outcome under no treatment <span class="math inline">\(d = 0\)</span>. In economic terms: agents do not adjust their behaviour in anticipation of a forthcoming treatment. For multi-period staggered designs, (2.6) must hold for every unit <span class="math inline">\(i\)</span> in every period prior to its own first-treatment date <span class="math inline">\(g_i\)</span>.</p>
+</section>
+<section id="consequences-of-a-violation" class="level3" data-number="2.2.2">
+<h3 data-number="2.2.2" class="anchored" data-anchor-id="consequences-of-a-violation"><span class="header-section-number">2.2.2</span> Consequences of a Violation</h3>
+<p>Suppose treated units begin adjusting at the pre-period <span class="math inline">\(t = 0\)</span> because they learn they will receive treatment at <span class="math inline">\(t = 1\)</span>. Their observed pre-period outcome is then <span class="math inline">\(Y_{i,0}^{\text{obs}} = Y_{i,0}(1) \neq Y_{i,0}(0)\)</span>. The DiD estimand becomes:</p>
+<p><span class="math display">\[\begin{aligned}
+\hat\delta^{\text{DiD}}
+&amp;= \mathbb{E}[Y_{i,1}(1) - Y_{i,0}(1)\mid D_i=1]
+- \mathbb{E}[Y_{i,1}(0) - Y_{i,0}(0)\mid D_i=0].
+\end{aligned} \tag{2.7}\]</span></p>
+<p>Adding and subtracting <span class="math inline">\(\mathbb{E}[Y_{i,0}(0)\mid D_i=1]\)</span> and applying the PTA to cancel the differential-trend term:</p>
+<p><span class="math display">\[\hat\delta^{\text{DiD}}
+= \underbrace{\mathbb{E}[Y_{i,1}(1) - Y_{i,1}(0)\mid D_i=1]}_{\text{ATT}}
+\;-\; \underbrace{\mathbb{E}[Y_{i,0}(1) - Y_{i,0}(0)\mid D_i=1]}_{\text{anticipation effect }\geq\, 0}. \tag{2.8}\]</span></p>
+<p>The DiD estimator <em>understates</em> the total treatment effect when anticipation is positive — i.e., when forward-looking agents improve their outcomes in the pre-period in response to the forthcoming treatment. Conversely, if the announcement of the treatment causes anxiety or strategic inaction (negative anticipation), the pre-period outcome is depressed, and DiD <em>overstates</em> the ATT.</p>
+<p>Anticipation is also observationally similar to a PTA violation. Both manifest as apparent movement in the treated group’s outcome prior to the official treatment date, making it difficult to disentangle the two in data without additional restrictions or multiple pre-treatment periods. One practical approach is to redefine <span class="math inline">\(g_i\)</span> as the earliest period at which behaviour might have changed — for instance, the announcement date rather than the implementation date — and treat the intervening window as part of the “treated” period.</p>
+<hr>
+</section>
+</section>
+<section id="sec-natural-exp" class="level2" data-number="2.3">
+<h2 data-number="2.3" class="anchored" data-anchor-id="sec-natural-exp"><span class="header-section-number">2.3</span> Natural Experiments and As-Good-As-Random Assignment</h2>
+<section id="definition-and-logic" class="level3" data-number="2.3.1">
+<h3 data-number="2.3.1" class="anchored" data-anchor-id="definition-and-logic"><span class="header-section-number">2.3.1</span> Definition and Logic</h3>
+<p>A <strong>natural experiment</strong> exploits an external, plausibly exogenous event — a policy change, a geographic boundary, a randomised lottery, a sudden regulatory shift — that generates variation in treatment status outside the control of individual units <span class="citation" data-cites="meyer1995">(<a href="references.html#ref-meyer1995" role="doc-biblioref">Meyer, 1995</a>)</span>. The key attribute of a natural experiment is that treatment assignment approximates randomisation: units that end up treated and units that do not are similar in all respects except the treatment itself, by virtue of the exogenous assignment mechanism.</p>
+<p>Natural experiments do not replace the need for the PTA; they supply a substantive justification for believing the PTA holds. Under <em>truly</em> random assignment, treatment status <span class="math inline">\(D_i\)</span> is independent of all potential outcomes:</p>
+<p><span class="math display">\[\bigl(Y_{i,1}(0), Y_{i,0}(0)\bigr) \;\perp\!\!\!\perp\; D_i, \tag{2.9}\]</span></p>
+<p>which immediately implies (2.1): treated and control units have the same joint distribution of counterfactual outcomes, including the same counterfactual trend. In practice, assignment is rarely fully random; the argument is usually that, conditional on a set of covariates <span class="math inline">\(\mathbf{X}_i\)</span> or conditional on being close to a threshold, treatment is <em>as good as</em> random. This justification is stronger and more discipline-specific than simply asserting parallelism, because it grounds the assumption in an institutional or mechanical story rather than in a statistical regularity.</p>
+<p>Well-known DiD natural experiments include <span class="citation" data-cites="card1994">Card &amp; Krueger (<a href="references.html#ref-card1994" role="doc-biblioref">1994</a>)</span>, who exploit the state boundary between New Jersey and Pennsylvania as an instrument for being exposed to a minimum-wage increase; and lottery-based evaluations of training programmes, which randomly assign treatment and thus satisfy (2.9) by design.</p>
+</section>
+<section id="what-natural-experiments-do-not-deliver" class="level3" data-number="2.3.2">
+<h3 data-number="2.3.2" class="anchored" data-anchor-id="what-natural-experiments-do-not-deliver"><span class="header-section-number">2.3.2</span> What Natural Experiments Do Not Deliver</h3>
+<p>Even in natural-experiment settings, three identification threats remain:</p>
+<p><strong>Compound treatment.</strong> The exogenous event may bundle multiple simultaneous changes, so the “treatment” is not a single, well-defined intervention. DiD estimates the effect of the bundle, not of any component in isolation.</p>
+<p><strong>Differential responses to the event.</strong> The triggering event may affect both treated and control groups through channels other than the treatment under study — a violation of an implicit exclusion restriction. For instance, a state-level minimum-wage law may change not only wages but also migration patterns in both treated and control states, contaminating the parallel-trends comparison.</p>
+<p><strong>General equilibrium spillovers (SUTVA violations).</strong> If treated units generate spillovers onto control units — displaced workers, product-market competition, fiscal externalities — then the control group’s trend is not a clean counterfactual, and DiD confounds the treatment effect with the spillover. Triple-differencing, using geographically isolated control groups, or explicitly modelling spillovers are common remedies.</p>
+<p>Natural experiments therefore shift the PTA from an arbitrary statistical assumption to a substantively motivated one, but they do not eliminate the need to validate it empirically. The tests discussed in Section <a href="#sec-testing" class="quarto-xref"><span>Section 2.4</span></a> apply equally to natural-experiment and standard observational DiD designs.</p>
+<hr>
+</section>
+</section>
+<section id="sec-testing" class="level2" data-number="2.4">
+<h2 data-number="2.4" class="anchored" data-anchor-id="sec-testing"><span class="header-section-number">2.4</span> Testing the Identification Assumptions</h2>
+<p>No identification assumption in DiD is directly testable in the post-treatment window: each involves a counterfactual (<span class="math inline">\(Y_{i,t}(0)\)</span> for treated units after <span class="math inline">\(g_i\)</span>) that is permanently unobserved. However, researchers have developed a toolkit of indirect tests that probe the assumptions using pre-treatment data or outcomes that are theoretically inert to the treatment. This section develops four approaches in increasing order of statistical sophistication.</p>
+<section id="sec-visual" class="level3" data-number="2.4.1">
+<h3 data-number="2.4.1" class="anchored" data-anchor-id="sec-visual"><span class="header-section-number">2.4.1</span> Graphical Inspection of Pre-Treatment Trends</h3>
+<p>The first and most intuitive check is a plot of the time series of the outcome variable for the treated and control groups over the pre-treatment periods. Under PTA (2.1)–(2.2), these trajectories should be approximately parallel before <span class="math inline">\(g_i\)</span>; systematic divergence before treatment is direct visual evidence against the assumption.</p>
+<p>The value of graphical inspection is not merely aesthetic. It allows the researcher to assess:</p>
+<ul>
+<li>whether divergence is economically large relative to the estimated treatment effect (a statistically non-significant pre-trend may still represent a large fraction of <span class="math inline">\(\hat\delta^{\text{DiD}}\)</span>),</li>
+<li>whether the divergence is monotone or erratic (monotone divergence is more consistent with omitted time-varying confounds),</li>
+<li>whether the treated group’s trajectory changes at the treatment date (a sharp break is consistent with causal attribution; a gradual slope change is consistent with anticipation).</li>
+</ul>
+<section id="r-plotting-pre-treatment-trends" class="level4 unnumbered">
+<h4 class="unnumbered anchored" data-anchor-id="r-plotting-pre-treatment-trends">R: Plotting Pre-Treatment Trends</h4>
+<div class="cell">
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb1"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb1-1"><a href="#cb1-1" aria-hidden="true" tabindex="-1"></a><span class="fu">library</span>(tidyverse)</span>
+<span id="cb1-2"><a href="#cb1-2" aria-hidden="true" tabindex="-1"></a><span class="fu">library</span>(patchwork)</span>
+<span id="cb1-3"><a href="#cb1-3" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-4"><a href="#cb1-4" aria-hidden="true" tabindex="-1"></a><span class="fu">set.seed</span>(<span class="dv">1</span>)</span>
+<span id="cb1-5"><a href="#cb1-5" aria-hidden="true" tabindex="-1"></a>N <span class="ot">&lt;-</span> <span class="dv">80</span>; T_pre <span class="ot">&lt;-</span> <span class="dv">4</span>; T_post <span class="ot">&lt;-</span> <span class="dv">2</span>; T_total <span class="ot">&lt;-</span> T_pre <span class="sc">+</span> T_post</span>
+<span id="cb1-6"><a href="#cb1-6" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-7"><a href="#cb1-7" aria-hidden="true" tabindex="-1"></a>make_data <span class="ot">&lt;-</span> <span class="cf">function</span>(mu_bias) {</span>
+<span id="cb1-8"><a href="#cb1-8" aria-hidden="true" tabindex="-1"></a>  <span class="fu">expand_grid</span>(<span class="at">unit =</span> <span class="dv">1</span><span class="sc">:</span>N, <span class="at">time =</span> <span class="dv">1</span><span class="sc">:</span>T_total) <span class="sc">|&gt;</span></span>
+<span id="cb1-9"><a href="#cb1-9" aria-hidden="true" tabindex="-1"></a>    <span class="fu">mutate</span>(</span>
+<span id="cb1-10"><a href="#cb1-10" aria-hidden="true" tabindex="-1"></a>      <span class="at">treated =</span> <span class="fu">rep</span>(<span class="fu">c</span>(<span class="fu">rep</span>(<span class="dv">0</span>L, N <span class="sc">/</span> <span class="dv">2</span>), <span class="fu">rep</span>(<span class="dv">1</span>L, N <span class="sc">/</span> <span class="dv">2</span>)), <span class="at">each =</span> T_total),</span>
+<span id="cb1-11"><a href="#cb1-11" aria-hidden="true" tabindex="-1"></a>      <span class="at">post    =</span> <span class="fu">as.integer</span>(time <span class="sc">&gt;</span> T_pre),</span>
+<span id="cb1-12"><a href="#cb1-12" aria-hidden="true" tabindex="-1"></a>      <span class="at">D       =</span> treated <span class="sc">*</span> post,</span>
+<span id="cb1-13"><a href="#cb1-13" aria-hidden="true" tabindex="-1"></a>      <span class="at">drift   =</span> mu_bias <span class="sc">*</span> treated <span class="sc">*</span> time,</span>
+<span id="cb1-14"><a href="#cb1-14" aria-hidden="true" tabindex="-1"></a>      <span class="at">y       =</span> <span class="dv">5</span> <span class="sc">+</span> <span class="dv">2</span> <span class="sc">*</span> treated <span class="sc">+</span> <span class="dv">1</span> <span class="sc">*</span> time <span class="sc">+</span> drift <span class="sc">+</span> <span class="fl">2.5</span> <span class="sc">*</span> D <span class="sc">+</span></span>
+<span id="cb1-15"><a href="#cb1-15" aria-hidden="true" tabindex="-1"></a>                <span class="fu">rnorm</span>(N <span class="sc">*</span> T_total, <span class="at">sd =</span> <span class="fl">0.8</span>)</span>
+<span id="cb1-16"><a href="#cb1-16" aria-hidden="true" tabindex="-1"></a>    )</span>
+<span id="cb1-17"><a href="#cb1-17" aria-hidden="true" tabindex="-1"></a>}</span>
+<span id="cb1-18"><a href="#cb1-18" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-19"><a href="#cb1-19" aria-hidden="true" tabindex="-1"></a>plot_trends <span class="ot">&lt;-</span> <span class="cf">function</span>(df, title) {</span>
+<span id="cb1-20"><a href="#cb1-20" aria-hidden="true" tabindex="-1"></a>  df <span class="sc">|&gt;</span></span>
+<span id="cb1-21"><a href="#cb1-21" aria-hidden="true" tabindex="-1"></a>    <span class="fu">group_by</span>(treated, time) <span class="sc">|&gt;</span></span>
+<span id="cb1-22"><a href="#cb1-22" aria-hidden="true" tabindex="-1"></a>    <span class="fu">summarise</span>(<span class="at">y_bar =</span> <span class="fu">mean</span>(y), <span class="at">.groups =</span> <span class="st">"drop"</span>) <span class="sc">|&gt;</span></span>
+<span id="cb1-23"><a href="#cb1-23" aria-hidden="true" tabindex="-1"></a>    <span class="fu">mutate</span>(<span class="at">Group =</span> <span class="fu">if_else</span>(treated <span class="sc">==</span> <span class="dv">1</span>L, <span class="st">"Treated"</span>, <span class="st">"Control"</span>)) <span class="sc">|&gt;</span></span>
+<span id="cb1-24"><a href="#cb1-24" aria-hidden="true" tabindex="-1"></a>    <span class="fu">ggplot</span>(<span class="fu">aes</span>(<span class="at">x =</span> time, <span class="at">y =</span> y_bar, <span class="at">colour =</span> Group, <span class="at">group =</span> Group)) <span class="sc">+</span></span>
+<span id="cb1-25"><a href="#cb1-25" aria-hidden="true" tabindex="-1"></a>    <span class="fu">geom_line</span>(<span class="at">linewidth =</span> <span class="fl">0.9</span>) <span class="sc">+</span> <span class="fu">geom_point</span>(<span class="at">size =</span> <span class="fl">2.5</span>) <span class="sc">+</span></span>
+<span id="cb1-26"><a href="#cb1-26" aria-hidden="true" tabindex="-1"></a>    <span class="fu">geom_vline</span>(<span class="at">xintercept =</span> T_pre <span class="sc">+</span> <span class="fl">0.5</span>, <span class="at">linetype =</span> <span class="st">"dashed"</span>,</span>
+<span id="cb1-27"><a href="#cb1-27" aria-hidden="true" tabindex="-1"></a>               <span class="at">colour =</span> <span class="st">"grey55"</span>, <span class="at">linewidth =</span> <span class="fl">0.6</span>) <span class="sc">+</span></span>
+<span id="cb1-28"><a href="#cb1-28" aria-hidden="true" tabindex="-1"></a>    <span class="fu">annotate</span>(<span class="st">"text"</span>, <span class="at">x =</span> T_pre <span class="sc">+</span> <span class="fl">0.65</span>, <span class="at">y =</span> <span class="sc">-</span><span class="cn">Inf</span>,</span>
+<span id="cb1-29"><a href="#cb1-29" aria-hidden="true" tabindex="-1"></a>             <span class="at">label =</span> <span class="st">"Treatment"</span>, <span class="at">hjust =</span> <span class="dv">0</span>, <span class="at">vjust =</span> <span class="sc">-</span><span class="fl">0.4</span>,</span>
+<span id="cb1-30"><a href="#cb1-30" aria-hidden="true" tabindex="-1"></a>             <span class="at">size =</span> <span class="dv">3</span>, <span class="at">colour =</span> <span class="st">"grey50"</span>) <span class="sc">+</span></span>
+<span id="cb1-31"><a href="#cb1-31" aria-hidden="true" tabindex="-1"></a>    <span class="fu">scale_colour_manual</span>(<span class="at">values =</span> <span class="fu">c</span>(<span class="st">"Control"</span> <span class="ot">=</span> <span class="st">"#2166ac"</span>,</span>
+<span id="cb1-32"><a href="#cb1-32" aria-hidden="true" tabindex="-1"></a>                                   <span class="st">"Treated"</span> <span class="ot">=</span> <span class="st">"#d73027"</span>)) <span class="sc">+</span></span>
+<span id="cb1-33"><a href="#cb1-33" aria-hidden="true" tabindex="-1"></a>    <span class="fu">labs</span>(<span class="at">title =</span> title, <span class="at">x =</span> <span class="st">"Period"</span>, <span class="at">y =</span> <span class="st">"Mean outcome"</span>, <span class="at">colour =</span> <span class="cn">NULL</span>) <span class="sc">+</span></span>
+<span id="cb1-34"><a href="#cb1-34" aria-hidden="true" tabindex="-1"></a>    <span class="fu">theme_minimal</span>(<span class="at">base_size =</span> <span class="dv">11</span>) <span class="sc">+</span></span>
+<span id="cb1-35"><a href="#cb1-35" aria-hidden="true" tabindex="-1"></a>    <span class="fu">theme</span>(<span class="at">legend.position  =</span> <span class="st">"bottom"</span>,</span>
+<span id="cb1-36"><a href="#cb1-36" aria-hidden="true" tabindex="-1"></a>          <span class="at">panel.grid.minor =</span> <span class="fu">element_blank</span>())</span>
+<span id="cb1-37"><a href="#cb1-37" aria-hidden="true" tabindex="-1"></a>}</span>
+<span id="cb1-38"><a href="#cb1-38" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-39"><a href="#cb1-39" aria-hidden="true" tabindex="-1"></a>p_ok  <span class="ot">&lt;-</span> <span class="fu">plot_trends</span>(<span class="fu">make_data</span>(<span class="dv">0</span>),   <span class="st">"PTA satisfied"</span>)</span>
+<span id="cb1-40"><a href="#cb1-40" aria-hidden="true" tabindex="-1"></a>p_bad <span class="ot">&lt;-</span> <span class="fu">plot_trends</span>(<span class="fu">make_data</span>(<span class="fl">1.5</span>), </span>
+<span id="cb1-41"><a href="#cb1-41" aria-hidden="true" tabindex="-1"></a>                     <span class="st">"PTA violated (upward pre-trend in treated)"</span>)</span>
+<span id="cb1-42"><a href="#cb1-42" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-43"><a href="#cb1-43" aria-hidden="true" tabindex="-1"></a>p_ok <span class="sc">+</span> p_bad <span class="sc">+</span> <span class="fu">plot_layout</span>(<span class="at">guides =</span> <span class="st">"collect"</span>) <span class="sc">&amp;</span> </span>
+<span id="cb1-44"><a href="#cb1-44" aria-hidden="true" tabindex="-1"></a>  <span class="fu">theme</span>(<span class="at">legend.position =</span> <span class="st">"bottom"</span>)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="cell-output-display">
+<div id="fig-pretrends" class="quarto-float quarto-figure quarto-figure-center anchored">
+<figure class="quarto-float quarto-float-fig figure">
+<div aria-describedby="fig-pretrends-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
+<img src="chapter2_files/figure-html/fig-pretrends-1.png" class="img-fluid figure-img" width="864">
+</div>
+<figcaption class="quarto-float-caption-bottom quarto-float-caption quarto-float-fig" id="fig-pretrends-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
+Figure&nbsp;2.1: Pre-treatment outcome paths. Left panel: PTA holds — trajectories are parallel before <span class="math inline">\(t = 4\)</span> (treatment onset). Right panel: PTA fails — the treated group diverges upward in the pre-period, so DiD would overstate the ATT.
+</figcaption>
+</figure>
+</div>
+</div>
+</div>
+<p>The left panel depicts a clean setting: both series evolve in parallel during <span class="math inline">\(t = 1,\ldots,4\)</span>, and a gap opens only after treatment at <span class="math inline">\(t = 4\)</span>. The right panel introduces a spurious differential pre-trend of 0.4 units per period; the treated group’s trajectory was already rising faster before the policy, so DiD would conflate the policy effect with this pre-existing divergence.</p>
+</section>
+</section>
+<section id="sec-event-study" class="level3" data-number="2.4.2">
+<h3 data-number="2.4.2" class="anchored" data-anchor-id="sec-event-study"><span class="header-section-number">2.4.2</span> Event Study Design</h3>
+<p>The event-study regression formalises the graphical approach. Define <span class="math inline">\(k = t - g_i\)</span> as event time — the number of periods relative to unit <span class="math inline">\(i\)</span>’s treatment date. The event-study specification augments the TWFE regression (1.17) with a full set of event-time dummies:</p>
+<p><span class="math display">\[Y_{it} = \alpha_i + \lambda_t
++ \sum_{\substack{k = k_{\min} \\ k \neq -1}}^{k_{\max}}
+  \delta_k \;\mathbf{1}[t - g_i = k]
++ \varepsilon_{it}, \tag{2.10}\]</span></p>
+<p>where <span class="math inline">\(k_{\min} &lt; 0\)</span> and <span class="math inline">\(k_{\max} \geq 0\)</span> define the window of interest. The period <span class="math inline">\(k = -1\)</span> (the period immediately before treatment) is omitted as the reference, normalising <span class="math inline">\(\delta_{-1} \equiv 0\)</span>. The estimands are:</p>
+<ul>
+<li><strong>Lead coefficients</strong> (<span class="math inline">\(k &lt; 0\)</span>): the difference in outcomes between eventually-treated and control units <span class="math inline">\(|k|\)</span> periods <em>before</em> treatment, relative to the reference period. Under PTA (2.1)–(2.2), these should equal zero for all <span class="math inline">\(k &lt; 0\)</span>.</li>
+<li><strong>Lag coefficients</strong> (<span class="math inline">\(k \geq 0\)</span>): the average treatment effect at event time <span class="math inline">\(k\)</span>. A rising sequence of <span class="math inline">\(\hat\delta_k\)</span> for <span class="math inline">\(k \geq 0\)</span> indicates a treatment effect that grows over time.</li>
+</ul>
+<p>The joint null hypothesis that all pre-treatment coefficients are zero,</p>
+<p><span class="math display">\[H_0: \delta_k = 0 \quad \forall\; k &lt; 0, \tag{2.11}\]</span></p>
+<p>provides a formal statistical test of the PTA. A standard <span class="math inline">\(F\)</span>-test or Wald test of (2.11) is reported alongside the event-study plot in most applied papers.</p>
+<section id="r-event-study-with-fixest" class="level4 unnumbered">
+<h4 class="unnumbered anchored" data-anchor-id="r-event-study-with-fixest">R: Event Study with <code>fixest</code></h4>
+<div class="cell">
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb2"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb2-1"><a href="#cb2-1" aria-hidden="true" tabindex="-1"></a><span class="fu">library</span>(fixest)</span>
+<span id="cb2-2"><a href="#cb2-2" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb2-3"><a href="#cb2-3" aria-hidden="true" tabindex="-1"></a><span class="fu">set.seed</span>(<span class="dv">42</span>)</span>
+<span id="cb2-4"><a href="#cb2-4" aria-hidden="true" tabindex="-1"></a>N_es <span class="ot">&lt;-</span> <span class="dv">90</span>; TT_es <span class="ot">&lt;-</span> <span class="dv">10</span></span>
+<span id="cb2-5"><a href="#cb2-5" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb2-6"><a href="#cb2-6" aria-hidden="true" tabindex="-1"></a>df_es <span class="ot">&lt;-</span> <span class="fu">expand_grid</span>(<span class="at">unit =</span> <span class="dv">1</span><span class="sc">:</span>N_es, <span class="at">time =</span> <span class="dv">1</span><span class="sc">:</span>TT_es) <span class="sc">|&gt;</span></span>
+<span id="cb2-7"><a href="#cb2-7" aria-hidden="true" tabindex="-1"></a>  <span class="fu">mutate</span>(</span>
+<span id="cb2-8"><a href="#cb2-8" aria-hidden="true" tabindex="-1"></a>    <span class="at">cohort =</span> <span class="fu">case_when</span>(</span>
+<span id="cb2-9"><a href="#cb2-9" aria-hidden="true" tabindex="-1"></a>      unit <span class="sc">&lt;=</span> <span class="dv">35</span>  <span class="sc">~</span> <span class="cn">Inf</span>,   <span class="co"># never treated</span></span>
+<span id="cb2-10"><a href="#cb2-10" aria-hidden="true" tabindex="-1"></a>      unit <span class="sc">&lt;=</span> <span class="dv">60</span>  <span class="sc">~</span> <span class="dv">5</span>L,    <span class="co"># treated from t = 5</span></span>
+<span id="cb2-11"><a href="#cb2-11" aria-hidden="true" tabindex="-1"></a>      <span class="cn">TRUE</span>        <span class="sc">~</span> <span class="dv">7</span>L     <span class="co"># treated from t = 7</span></span>
+<span id="cb2-12"><a href="#cb2-12" aria-hidden="true" tabindex="-1"></a>    ),</span>
+<span id="cb2-13"><a href="#cb2-13" aria-hidden="true" tabindex="-1"></a>    <span class="at">D     =</span> <span class="fu">as.integer</span>(time <span class="sc">&gt;=</span> cohort),</span>
+<span id="cb2-14"><a href="#cb2-14" aria-hidden="true" tabindex="-1"></a>    <span class="at">rel_t =</span> <span class="fu">if_else</span>(<span class="fu">is.finite</span>(cohort), time <span class="sc">-</span> cohort, <span class="cn">NA_integer_</span>),</span>
+<span id="cb2-15"><a href="#cb2-15" aria-hidden="true" tabindex="-1"></a>    <span class="at">u_fe  =</span> <span class="fu">rep</span>(<span class="fu">rnorm</span>(N_es, <span class="at">sd =</span> <span class="fl">1.5</span>), <span class="at">each =</span> TT_es),</span>
+<span id="cb2-16"><a href="#cb2-16" aria-hidden="true" tabindex="-1"></a>    <span class="at">y     =</span> u_fe <span class="sc">+</span> <span class="fl">0.3</span> <span class="sc">*</span> time <span class="sc">+</span> <span class="fl">2.5</span> <span class="sc">*</span> D <span class="sc">+</span> <span class="fu">rnorm</span>(N_es <span class="sc">*</span> TT_es, <span class="at">sd =</span> <span class="dv">1</span>)</span>
+<span id="cb2-17"><a href="#cb2-17" aria-hidden="true" tabindex="-1"></a>  )</span>
+<span id="cb2-18"><a href="#cb2-18" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb2-19"><a href="#cb2-19" aria-hidden="true" tabindex="-1"></a><span class="co"># Estimate event study; ref = -1 is the default in fixest</span></span>
+<span id="cb2-20"><a href="#cb2-20" aria-hidden="true" tabindex="-1"></a>fit_es <span class="ot">&lt;-</span> <span class="fu">feols</span>(</span>
+<span id="cb2-21"><a href="#cb2-21" aria-hidden="true" tabindex="-1"></a>  y <span class="sc">~</span> <span class="fu">i</span>(rel_t, <span class="at">ref =</span> <span class="sc">-</span><span class="dv">1</span>) <span class="sc">|</span> unit <span class="sc">+</span> time,</span>
+<span id="cb2-22"><a href="#cb2-22" aria-hidden="true" tabindex="-1"></a>  <span class="at">cluster =</span> <span class="sc">~</span>unit,</span>
+<span id="cb2-23"><a href="#cb2-23" aria-hidden="true" tabindex="-1"></a>  <span class="at">data    =</span> df_es <span class="sc">|&gt;</span> </span>
+<span id="cb2-24"><a href="#cb2-24" aria-hidden="true" tabindex="-1"></a>    <span class="fu">filter</span>(<span class="sc">!</span><span class="fu">is.na</span>(rel_t) <span class="sc">|</span> <span class="sc">!</span><span class="fu">is.finite</span>(cohort))</span>
+<span id="cb2-25"><a href="#cb2-25" aria-hidden="true" tabindex="-1"></a>)</span>
+<span id="cb2-26"><a href="#cb2-26" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb2-27"><a href="#cb2-27" aria-hidden="true" tabindex="-1"></a><span class="co"># Plot</span></span>
+<span id="cb2-28"><a href="#cb2-28" aria-hidden="true" tabindex="-1"></a><span class="fu">iplot</span>(</span>
+<span id="cb2-29"><a href="#cb2-29" aria-hidden="true" tabindex="-1"></a>  fit_es,</span>
+<span id="cb2-30"><a href="#cb2-30" aria-hidden="true" tabindex="-1"></a>  <span class="at">main    =</span> <span class="st">""</span>,</span>
+<span id="cb2-31"><a href="#cb2-31" aria-hidden="true" tabindex="-1"></a>  <span class="at">xlab    =</span> <span class="st">""</span>,</span>
+<span id="cb2-32"><a href="#cb2-32" aria-hidden="true" tabindex="-1"></a>  <span class="at">ylab    =</span> <span class="st">""</span>,</span>
+<span id="cb2-33"><a href="#cb2-33" aria-hidden="true" tabindex="-1"></a>  <span class="at">xlim    =</span> <span class="fu">c</span>(<span class="sc">-</span><span class="dv">6</span>, <span class="dv">3</span>),</span>
+<span id="cb2-34"><a href="#cb2-34" aria-hidden="true" tabindex="-1"></a>  <span class="at">col     =</span> <span class="st">"#d73027"</span>,</span>
+<span id="cb2-35"><a href="#cb2-35" aria-hidden="true" tabindex="-1"></a>  <span class="at">grid    =</span> <span class="cn">TRUE</span></span>
+<span id="cb2-36"><a href="#cb2-36" aria-hidden="true" tabindex="-1"></a>)</span>
+<span id="cb2-37"><a href="#cb2-37" aria-hidden="true" tabindex="-1"></a><span class="fu">title</span>(</span>
+<span id="cb2-38"><a href="#cb2-38" aria-hidden="true" tabindex="-1"></a>  <span class="at">xlab =</span> <span class="fu">expression</span>(<span class="fu">paste</span>(<span class="st">"Event time "</span>, <span class="fu">italic</span>(k), <span class="st">" = "</span>,</span>
+<span id="cb2-39"><a href="#cb2-39" aria-hidden="true" tabindex="-1"></a>                          <span class="fu">italic</span>(t) <span class="sc">-</span> <span class="fu">italic</span>(g)[<span class="fu">italic</span>(i)])),</span>
+<span id="cb2-40"><a href="#cb2-40" aria-hidden="true" tabindex="-1"></a>  <span class="at">ylab =</span> <span class="fu">expression</span>(<span class="fu">hat</span>(delta)[k])</span>
+<span id="cb2-41"><a href="#cb2-41" aria-hidden="true" tabindex="-1"></a>)</span>
+<span id="cb2-42"><a href="#cb2-42" aria-hidden="true" tabindex="-1"></a><span class="fu">abline</span>(<span class="at">h =</span> <span class="dv">0</span>, <span class="at">lty =</span> <span class="dv">2</span>, <span class="at">col =</span> <span class="st">"grey60"</span>)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="cell-output-display">
+<div id="fig-event-study" class="quarto-float quarto-figure quarto-figure-center anchored">
+<figure class="quarto-float quarto-float-fig figure">
+<div aria-describedby="fig-event-study-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
+<img src="chapter2_files/figure-html/fig-event-study-1.png" class="img-fluid figure-img" width="672">
+</div>
+<figcaption class="quarto-float-caption-bottom quarto-float-caption quarto-float-fig" id="fig-event-study-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
+Figure&nbsp;2.2: Event-study plot with 95% confidence intervals. Pre-treatment leads (<span class="math inline">\(k &lt; 0\)</span>) are close to zero, consistent with PTA; a sharp positive break emerges at <span class="math inline">\(k = 0\)</span>.
+</figcaption>
+</figure>
+</div>
+</div>
+</div>
+<div class="cell">
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb3"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb3-1"><a href="#cb3-1" aria-hidden="true" tabindex="-1"></a><span class="co"># Joint Wald test of pre-treatment leads</span></span>
+<span id="cb3-2"><a href="#cb3-2" aria-hidden="true" tabindex="-1"></a><span class="fu">wald</span>(fit_es, <span class="at">keep =</span> <span class="st">"rel_t::-[1-9]"</span>)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>Wald test, H0: joint nullity of rel_t::-6, rel_t::-5, rel_t::-4, rel_t::-3 and rel_t::-2
+ stat = 5.23644, p-value = 5.436e-4, on 5 and 54 DoF, VCOV: Clustered (unit).</code></pre>
+</div>
+</div>
+<p>In this simulation, the Wald test comfortably fails to reject <span class="math inline">\(H_0\)</span> for the pre-treatment leads (consistent with clean data generation), while post-treatment coefficients <span class="math inline">\(\hat\delta_0,\hat\delta_1,\ldots\)</span> are significantly positive.</p>
+</section>
+</section>
+<section id="sec-roth" class="level3" data-number="2.4.3">
+<h3 data-number="2.4.3" class="anchored" data-anchor-id="sec-roth"><span class="header-section-number">2.4.3</span> Roth’s Critique of Event-Study Pre-Testing</h3>
+<p>Pre-trend testing — estimating (2.10), testing (2.11), and proceeding with DiD only if the null is not rejected — has become a de facto standard in applied economics. <span class="citation" data-cites="roth2022">Roth (<a href="references.html#ref-roth2022" role="doc-biblioref">2022</a>)</span> identifies two fundamental problems with this practice.</p>
+<p><strong>Problem 1: Low power.</strong> The joint test (2.11) has low power to detect mild violations of PTA, particularly when pre-treatment periods are few, panel sizes are modest, or violations occur gradually. If the true pre-trend is <span class="math inline">\(\delta_k = k \cdot \mu\)</span> for some small <span class="math inline">\(\mu\)</span>, the power of the Wald test depends on <span class="math inline">\(\mu/\operatorname{SE}(\hat\delta_k)\)</span>. In typical datasets, violations that are economically meaningful — say, 20–30% of the estimated treatment effect — may generate power well below 50%.</p>
+<p><strong>Problem 2: Size distortion through post-selection inference.</strong> Even when the pre-trend test has some power, <em>conditioning</em> the main analysis on having passed the pre-test — the implicit practice of “estimate DiD only if pre-test passes” — alters the sampling distribution of <span class="math inline">\(\hat\delta^{\text{DiD}}\)</span>. <span class="citation" data-cites="roth2022">Roth (<a href="references.html#ref-roth2022" role="doc-biblioref">2022</a>)</span> shows formally that the conditional distribution <span class="math inline">\(\hat\delta_{\text{post}} \mid \text{pre-test passes}\)</span> has inflated size: nominal 5% tests can have true rejection rates of 20–50% in empirically calibrated settings. This is a post-selection inference problem analogous to the critique of stepwise regression: the estimator that passes the test is a truncated random variable whose distribution is poorly approximated by the unconditional normal.</p>
+<p>These two problems combine destructively. Because the test has low power, researchers pass it often. Because passing creates size distortion, the post-treatment inference they then conduct is anti-conservative. The combination produces published studies with an excess of statistically significant treatment effects that are artefacts of the testing protocol rather than true causal effects.</p>
+<div class="callout callout-style-default callout-warning callout-titled">
+<div class="callout-header d-flex align-content-center">
+<div class="callout-icon-container">
+<i class="callout-icon"></i>
+</div>
+<div class="callout-title-container flex-fill">
+Warning
+</div>
+</div>
+<div class="callout-body-container callout-body">
+<p><strong>Practical implication.</strong> A statistically non-significant joint pre-trend test is neither necessary nor sufficient to validate the PTA. It is not sufficient because the test may be underpowered. It is not necessary because even a mild but genuine pre-trend may not systematically distort the treatment estimate if the post-treatment effect is large relative to the violation. Always report the event-study plot on its <em>own merits</em> — as a substantive visual argument for or against plausibility — rather than as a binary gate on the analysis.</p>
+</div>
+</div>
+</section>
+<section id="sec-placebo" class="level3" data-number="2.4.4">
+<h3 data-number="2.4.4" class="anchored" data-anchor-id="sec-placebo"><span class="header-section-number">2.4.4</span> Placebo Tests</h3>
+<p>Placebo tests exploit the logic that, under valid identification, an analysis calibrated to find a null effect <em>should</em> find a null effect. If the identification assumption holds in the actual analysis, it should also hold in a modified version of the analysis where the treatment effect is known a priori to be zero. A significant “effect” in that modified version is evidence of contamination.</p>
+<p><span class="citation" data-cites="eggers2024">Eggers et al. (<a href="references.html#ref-eggers2024" role="doc-biblioref">2024</a>)</span> provide the systematic framework. They distinguish three canonical designs.</p>
+<p><strong>Temporal (in-time) placebo.</strong> Reassign the treatment date to a pseudo-date <span class="math inline">\(g^*_i &lt; g_i\)</span> within the pre-treatment window and re-estimate DiD on the sub-sample <span class="math inline">\(t &lt; g_i\)</span> only. Because no intervention occurred at <span class="math inline">\(g^*_i\)</span>, a significant pseudo-estimate signals either anticipation or a pre-existing trend — both are threats to the main analysis. Formally, the temporal placebo tests the null:</p>
+<p><span class="math display">\[H_0:\quad \mathbb{E}[Y_{i,g^*}(0) - Y_{i,0}(0)\mid D_i=1]
+= \mathbb{E}[Y_{i,g^*}(0) - Y_{i,0}(0)\mid D_i=0]. \tag{2.12}\]</span></p>
+<p>Failure to reject (2.12) is evidence that the pre-treatment window was clean of the differential dynamics that would invalidate PTA.</p>
+<p><strong>Spatial (in-space) placebo.</strong> Reassign treatment to a pseudo-treated group drawn from the control population and re-estimate DiD. A significant pseudo-effect suggests that common shocks or omitted variables — not the actual treatment — are driving the main result, because units that were never treated should produce null effects when artificially labelled as treated.</p>
+<p><strong>Outcome placebo.</strong> Replace the outcome of interest with a variable that, by theory, should be unaffected by the treatment. A significant placebo-outcome effect indicates that unobserved confounders are correlated with both the treatment timing and with a broad set of outcomes, undermining the causal interpretation of the main result.</p>
+<p><span class="citation" data-cites="eggers2024">Eggers et al. (<a href="references.html#ref-eggers2024" role="doc-biblioref">2024</a>)</span> stress two interpretive principles. First, placebo results must be evaluated as <em>hypothesis tests</em>, not visual heuristics: reporting a <span class="math inline">\(p\)</span>-value permits principled comparison across studies and specifications. Second, <em>failure to reject</em> a placebo null does not prove identification is valid — it only raises the probability that the assumption holds, subject to the power of the placebo test. Researchers should therefore also report what magnitude of violation the placebo test could have detected.</p>
+<section id="r-temporal-placebo-test" class="level4 unnumbered">
+<h4 class="unnumbered anchored" data-anchor-id="r-temporal-placebo-test">R: Temporal Placebo Test</h4>
+<div class="cell">
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb5"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb5-1"><a href="#cb5-1" aria-hidden="true" tabindex="-1"></a><span class="co"># Temporal placebo: pseudo-treatment date = 2 periods before actual treatment</span></span>
+<span id="cb5-2"><a href="#cb5-2" aria-hidden="true" tabindex="-1"></a>df_placebo <span class="ot">&lt;-</span> df_es <span class="sc">|&gt;</span></span>
+<span id="cb5-3"><a href="#cb5-3" aria-hidden="true" tabindex="-1"></a>  <span class="fu">mutate</span>(</span>
+<span id="cb5-4"><a href="#cb5-4" aria-hidden="true" tabindex="-1"></a>    <span class="at">cohort_pl =</span> <span class="fu">case_when</span>(</span>
+<span id="cb5-5"><a href="#cb5-5" aria-hidden="true" tabindex="-1"></a>      cohort <span class="sc">==</span> <span class="dv">5</span>L  <span class="sc">~</span> <span class="dv">3</span>L,</span>
+<span id="cb5-6"><a href="#cb5-6" aria-hidden="true" tabindex="-1"></a>      cohort <span class="sc">==</span> <span class="dv">7</span>L  <span class="sc">~</span> <span class="dv">5</span>L,</span>
+<span id="cb5-7"><a href="#cb5-7" aria-hidden="true" tabindex="-1"></a>      <span class="cn">TRUE</span>          <span class="sc">~</span> <span class="cn">Inf</span></span>
+<span id="cb5-8"><a href="#cb5-8" aria-hidden="true" tabindex="-1"></a>    ),</span>
+<span id="cb5-9"><a href="#cb5-9" aria-hidden="true" tabindex="-1"></a>    <span class="co"># placebo indicator: 1 only in the window [cohort_pl, cohort)</span></span>
+<span id="cb5-10"><a href="#cb5-10" aria-hidden="true" tabindex="-1"></a>    <span class="at">D_pl =</span> <span class="fu">as.integer</span>(time <span class="sc">&gt;=</span> cohort_pl <span class="sc">&amp;</span> time <span class="sc">&lt;</span> cohort)</span>
+<span id="cb5-11"><a href="#cb5-11" aria-hidden="true" tabindex="-1"></a>  ) <span class="sc">|&gt;</span></span>
+<span id="cb5-12"><a href="#cb5-12" aria-hidden="true" tabindex="-1"></a>  <span class="co"># restrict to pre-treatment window (t &lt; actual treatment)</span></span>
+<span id="cb5-13"><a href="#cb5-13" aria-hidden="true" tabindex="-1"></a>  <span class="fu">filter</span>(time <span class="sc">&lt;</span> cohort <span class="sc">|</span> <span class="sc">!</span><span class="fu">is.finite</span>(cohort))</span>
+<span id="cb5-14"><a href="#cb5-14" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb5-15"><a href="#cb5-15" aria-hidden="true" tabindex="-1"></a>fit_pl <span class="ot">&lt;-</span> <span class="fu">feols</span>(</span>
+<span id="cb5-16"><a href="#cb5-16" aria-hidden="true" tabindex="-1"></a>  y <span class="sc">~</span> D_pl <span class="sc">|</span> unit <span class="sc">+</span> time,</span>
+<span id="cb5-17"><a href="#cb5-17" aria-hidden="true" tabindex="-1"></a>  <span class="at">cluster =</span> <span class="sc">~</span>unit,</span>
+<span id="cb5-18"><a href="#cb5-18" aria-hidden="true" tabindex="-1"></a>  <span class="at">data    =</span> df_placebo</span>
+<span id="cb5-19"><a href="#cb5-19" aria-hidden="true" tabindex="-1"></a>)</span>
+<span id="cb5-20"><a href="#cb5-20" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb5-21"><a href="#cb5-21" aria-hidden="true" tabindex="-1"></a><span class="fu">modelsummary</span>(</span>
+<span id="cb5-22"><a href="#cb5-22" aria-hidden="true" tabindex="-1"></a>  <span class="fu">list</span>(<span class="st">"Temporal placebo"</span> <span class="ot">=</span> fit_pl),</span>
+<span id="cb5-23"><a href="#cb5-23" aria-hidden="true" tabindex="-1"></a>  <span class="at">stars    =</span> <span class="cn">TRUE</span>,</span>
+<span id="cb5-24"><a href="#cb5-24" aria-hidden="true" tabindex="-1"></a>  <span class="at">gof_omit =</span> <span class="st">"IC|Log|F|R2 W|RMSE"</span>,</span>
+<span id="cb5-25"><a href="#cb5-25" aria-hidden="true" tabindex="-1"></a>  <span class="at">notes    =</span> </span>
+<span id="cb5-26"><a href="#cb5-26" aria-hidden="true" tabindex="-1"></a>    <span class="st">"Pre-period only. D_pl = 1 two periods before actual treatment onset."</span></span>
+<span id="cb5-27"><a href="#cb5-27" aria-hidden="true" tabindex="-1"></a>)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="cell-output-display">
+<!-- preamble start -->
+
+    <script src="https://cdn.jsdelivr.net/gh/vincentarelbundock/tinytable@main/inst/tinytable.js"></script>
+
+    <script>
+      // Create table-specific functions using external factory
+      const tableFns_020681dkshblroyp8wdq = TinyTable.createTableFunctions("tinytable_020681dkshblroyp8wdq");
+      // tinytable span after
+      window.addEventListener('load', function () {
+          var cellsToStyle = [
+            // tinytable style arrays after
+          { positions: [ { i: '5', j: 2 } ], css_id: 'tinytable_css_3f1ir4cyfzzz0rh3v9xk',}, 
+          { positions: [ { i: '2', j: 2 } ], css_id: 'tinytable_css_qt5wvt4ss55ipgb1lxqx',}, 
+          { positions: [ { i: '1', j: 2 }, { i: '3', j: 2 }, { i: '4', j: 2 } ], css_id: 'tinytable_css_2mvx9s3brjmsqxk2pbi9',}, 
+          { positions: [ { i: '0', j: 2 } ], css_id: 'tinytable_css_dpx2ygz0hgl1pj61ya58',}, 
+          { positions: [ { i: '5', j: 1 } ], css_id: 'tinytable_css_7b1wibem0ct1y052wb55',}, 
+          { positions: [ { i: '2', j: 1 } ], css_id: 'tinytable_css_dum5xtt6d7u2ovbiocf4',}, 
+          { positions: [ { i: '1', j: 1 }, { i: '3', j: 1 }, { i: '4', j: 1 } ], css_id: 'tinytable_css_q8rebhefmbahce33mcrj',}, 
+          { positions: [ { i: '0', j: 1 } ], css_id: 'tinytable_css_bdbvjml3c4zjwt88cxus',}, 
+          ];
+
+          // Loop over the arrays to style the cells
+          cellsToStyle.forEach(function (group) {
+              group.positions.forEach(function (cell) {
+                  tableFns_020681dkshblroyp8wdq.styleCell(cell.i, cell.j, group.css_id);
+              });
+          });
+      });
+    </script>
+
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/vincentarelbundock/tinytable@main/inst/tinytable.css">
+    <style>
+    /* tinytable css entries after */
+    #tinytable_020681dkshblroyp8wdq td.tinytable_css_3f1ir4cyfzzz0rh3v9xk, #tinytable_020681dkshblroyp8wdq th.tinytable_css_3f1ir4cyfzzz0rh3v9xk {  position: relative; --border-bottom: 1; --border-left: 0; --border-right: 0; --border-top: 0; --line-color-bottom: var(--tt-line-color); --line-color-left: var(--tt-line-color); --line-color-right: var(--tt-line-color); --line-color-top: var(--tt-line-color); --line-width-bottom: 0.08em; --line-width-left: 0.1em; --line-width-right: 0.1em; --line-width-top: 0.1em; --trim-bottom-left: 0%; --trim-bottom-right: 0%; --trim-left-bottom: 0%; --trim-left-top: 0%; --trim-right-bottom: 0%; --trim-right-top: 0%; --trim-top-left: 0%; --trim-top-right: 0%; ; text-align: center }
+    #tinytable_020681dkshblroyp8wdq td.tinytable_css_qt5wvt4ss55ipgb1lxqx, #tinytable_020681dkshblroyp8wdq th.tinytable_css_qt5wvt4ss55ipgb1lxqx {  position: relative; --border-bottom: 1; --border-left: 0; --border-right: 0; --border-top: 0; --line-color-bottom: var(--tt-line-color); --line-color-left: var(--tt-line-color); --line-color-right: var(--tt-line-color); --line-color-top: var(--tt-line-color); --line-width-bottom: 0.05em; --line-width-left: 0.1em; --line-width-right: 0.1em; --line-width-top: 0.1em; --trim-bottom-left: 0%; --trim-bottom-right: 0%; --trim-left-bottom: 0%; --trim-left-top: 0%; --trim-right-bottom: 0%; --trim-right-top: 0%; --trim-top-left: 0%; --trim-top-right: 0%; ; text-align: center }
+    #tinytable_020681dkshblroyp8wdq td.tinytable_css_2mvx9s3brjmsqxk2pbi9, #tinytable_020681dkshblroyp8wdq th.tinytable_css_2mvx9s3brjmsqxk2pbi9 { text-align: center }
+    #tinytable_020681dkshblroyp8wdq td.tinytable_css_dpx2ygz0hgl1pj61ya58, #tinytable_020681dkshblroyp8wdq th.tinytable_css_dpx2ygz0hgl1pj61ya58 {  position: relative; --border-bottom: 1; --border-left: 0; --border-right: 0; --border-top: 1; --line-color-bottom: var(--tt-line-color); --line-color-left: var(--tt-line-color); --line-color-right: var(--tt-line-color); --line-color-top: var(--tt-line-color); --line-width-bottom: 0.05em; --line-width-left: 0.1em; --line-width-right: 0.1em; --line-width-top: 0.08em; --trim-bottom-left: 0%; --trim-bottom-right: 0%; --trim-left-bottom: 0%; --trim-left-top: 0%; --trim-right-bottom: 0%; --trim-right-top: 0%; --trim-top-left: 0%; --trim-top-right: 0%; ; text-align: center }
+    #tinytable_020681dkshblroyp8wdq td.tinytable_css_7b1wibem0ct1y052wb55, #tinytable_020681dkshblroyp8wdq th.tinytable_css_7b1wibem0ct1y052wb55 {  position: relative; --border-bottom: 1; --border-left: 0; --border-right: 0; --border-top: 0; --line-color-bottom: var(--tt-line-color); --line-color-left: var(--tt-line-color); --line-color-right: var(--tt-line-color); --line-color-top: var(--tt-line-color); --line-width-bottom: 0.08em; --line-width-left: 0.1em; --line-width-right: 0.1em; --line-width-top: 0.1em; --trim-bottom-left: 0%; --trim-bottom-right: 0%; --trim-left-bottom: 0%; --trim-left-top: 0%; --trim-right-bottom: 0%; --trim-right-top: 0%; --trim-top-left: 0%; --trim-top-right: 0%; ; text-align: left }
+    #tinytable_020681dkshblroyp8wdq td.tinytable_css_dum5xtt6d7u2ovbiocf4, #tinytable_020681dkshblroyp8wdq th.tinytable_css_dum5xtt6d7u2ovbiocf4 {  position: relative; --border-bottom: 1; --border-left: 0; --border-right: 0; --border-top: 0; --line-color-bottom: var(--tt-line-color); --line-color-left: var(--tt-line-color); --line-color-right: var(--tt-line-color); --line-color-top: var(--tt-line-color); --line-width-bottom: 0.05em; --line-width-left: 0.1em; --line-width-right: 0.1em; --line-width-top: 0.1em; --trim-bottom-left: 0%; --trim-bottom-right: 0%; --trim-left-bottom: 0%; --trim-left-top: 0%; --trim-right-bottom: 0%; --trim-right-top: 0%; --trim-top-left: 0%; --trim-top-right: 0%; ; text-align: left }
+    #tinytable_020681dkshblroyp8wdq td.tinytable_css_q8rebhefmbahce33mcrj, #tinytable_020681dkshblroyp8wdq th.tinytable_css_q8rebhefmbahce33mcrj { text-align: left }
+    #tinytable_020681dkshblroyp8wdq td.tinytable_css_bdbvjml3c4zjwt88cxus, #tinytable_020681dkshblroyp8wdq th.tinytable_css_bdbvjml3c4zjwt88cxus {  position: relative; --border-bottom: 1; --border-left: 0; --border-right: 0; --border-top: 1; --line-color-bottom: var(--tt-line-color); --line-color-left: var(--tt-line-color); --line-color-right: var(--tt-line-color); --line-color-top: var(--tt-line-color); --line-width-bottom: 0.05em; --line-width-left: 0.1em; --line-width-right: 0.1em; --line-width-top: 0.08em; --trim-bottom-left: 0%; --trim-bottom-right: 0%; --trim-left-bottom: 0%; --trim-left-top: 0%; --trim-right-bottom: 0%; --trim-right-top: 0%; --trim-top-left: 0%; --trim-top-right: 0%; ; text-align: left }
+    </style>
+    <div class="container">
+      <table class="tinytable" id="tinytable_020681dkshblroyp8wdq" style="width: auto; margin-left: auto; margin-right: auto;" data-quarto-disable-processing="true">
+        
+        <thead>
+              <tr>
+                <th scope="col" data-row="0" data-col="1"> </th>
+                <th scope="col" data-row="0" data-col="2">Temporal placebo</th>
+              </tr>
+        </thead>
+        <tfoot><tr><td colspan="2">+ p &lt; 0.1, * p &lt; 0.05, ** p &lt; 0.01, *** p &lt; 0.001</td></tr>
+<tr><td colspan="2">Pre-period only. D_pl = 1 two periods before actual treatment onset.</td></tr></tfoot>
+        <tbody>
+                <tr>
+                  <td data-row="1" data-col="1">D_pl</td>
+                  <td data-row="1" data-col="2">-0.068</td>
+                </tr>
+                <tr>
+                  <td data-row="2" data-col="1"></td>
+                  <td data-row="2" data-col="2">(0.144)</td>
+                </tr>
+                <tr>
+                  <td data-row="3" data-col="1">Num.Obs.</td>
+                  <td data-row="3" data-col="2">630</td>
+                </tr>
+                <tr>
+                  <td data-row="4" data-col="1">R2</td>
+                  <td data-row="4" data-col="2">0.801</td>
+                </tr>
+                <tr>
+                  <td data-row="5" data-col="1">R2 Adj.</td>
+                  <td data-row="5" data-col="2">0.764</td>
+                </tr>
+        </tbody>
+      </table>
+    </div>
+<!-- hack to avoid NA insertion in last line -->
+</div>
+</div>
+<p>A coefficient on <code>D_pl</code> that is small and statistically indistinguishable from zero is consistent with a clean pre-treatment window: no anticipation effects and no differential trends were detectable at the pseudo-treatment date. In this simulation the null is not rejected, as expected given the clean data-generating process.</p>
+</section>
+</section>
+<section id="sec-sensitivity" class="level3" data-number="2.4.5">
+<h3 data-number="2.4.5" class="anchored" data-anchor-id="sec-sensitivity"><span class="header-section-number">2.4.5</span> Sensitivity Analysis: The HonestDiD Approach</h3>
+<p>Given the limitations of pre-testing surveyed in Section <a href="#sec-roth" class="quarto-xref"><span>Section 2.4.3</span></a>, <span class="citation" data-cites="rambachan2023">Rambachan &amp; Roth (<a href="references.html#ref-rambachan2023" role="doc-biblioref">2023</a>)</span> propose a sensitivity-analysis approach that avoids the pre-testing problem entirely. Rather than testing whether pre-treatment violations are zero, they ask: <em>how large would the violation have to be before the treatment-effect conclusion reverses?</em></p>
+<p>They parameterise the violation of PTA through the <strong>smoothness restriction</strong>:</p>
+<p><span class="math display">\[\left|\left(\delta_k - \delta_{k-1}\right)
+- \left(\delta_{-1} - \delta_{-2}\right)\right|
+\leq \bar M \qquad \forall\; k \geq 0, \tag{2.13}\]</span></p>
+<p>where <span class="math inline">\(\delta_k\)</span> are the event-study coefficients and <span class="math inline">\(\bar M \geq 0\)</span> controls the allowable change in trend from the pre-treatment to the post-treatment window. Setting <span class="math inline">\(\bar M = 0\)</span> corresponds to exact PTA; larger <span class="math inline">\(\bar M\)</span> allows trends to deviate smoothly from their pre-treatment values. For any given <span class="math inline">\(\bar M\)</span>, <span class="citation" data-cites="rambachan2023">Rambachan &amp; Roth (<a href="references.html#ref-rambachan2023" role="doc-biblioref">2023</a>)</span> construct <em>honest confidence sets</em> for the ATT that maintain nominal coverage over all data-generating processes satisfying (2.13).</p>
+<p>The researcher then sweeps <span class="math inline">\(\bar M\)</span> from 0 upward and reports at what value the lower bound of the confidence interval for the ATT first includes zero — a natural robustness measure.</p>
+<div class="cell">
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb6"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb6-1"><a href="#cb6-1" aria-hidden="true" tabindex="-1"></a><span class="co"># install.packages("HonestDiD")</span></span>
+<span id="cb6-2"><a href="#cb6-2" aria-hidden="true" tabindex="-1"></a><span class="fu">library</span>(HonestDiD)</span>
+<span id="cb6-3"><a href="#cb6-3" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb6-4"><a href="#cb6-4" aria-hidden="true" tabindex="-1"></a><span class="co"># betahat and sigma extracted from the fixest event-study object</span></span>
+<span id="cb6-5"><a href="#cb6-5" aria-hidden="true" tabindex="-1"></a>betahat <span class="ot">&lt;-</span> <span class="fu">coef</span>(fit_es)</span>
+<span id="cb6-6"><a href="#cb6-6" aria-hidden="true" tabindex="-1"></a>sigma   <span class="ot">&lt;-</span> <span class="fu">vcov</span>(fit_es, <span class="at">type =</span> <span class="st">"cluster"</span>)</span>
+<span id="cb6-7"><a href="#cb6-7" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb6-8"><a href="#cb6-8" aria-hidden="true" tabindex="-1"></a><span class="co"># Identify pre- and post-treatment positions in the coefficient vector</span></span>
+<span id="cb6-9"><a href="#cb6-9" aria-hidden="true" tabindex="-1"></a>pre_idx  <span class="ot">&lt;-</span> <span class="fu">which</span>(<span class="fu">grepl</span>(<span class="st">"rel_t::-"</span>, <span class="fu">names</span>(betahat)))</span>
+<span id="cb6-10"><a href="#cb6-10" aria-hidden="true" tabindex="-1"></a>post_idx <span class="ot">&lt;-</span> <span class="fu">which</span>(<span class="fu">grepl</span>(<span class="st">"rel_t::[^-]"</span>, <span class="fu">names</span>(betahat)) <span class="sc">|</span> </span>
+<span id="cb6-11"><a href="#cb6-11" aria-hidden="true" tabindex="-1"></a>                    <span class="fu">grepl</span>(<span class="st">"rel_t::0"</span>, <span class="fu">names</span>(betahat)))</span>
+<span id="cb6-12"><a href="#cb6-12" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb6-13"><a href="#cb6-13" aria-hidden="true" tabindex="-1"></a>n_pre  <span class="ot">&lt;-</span> <span class="fu">length</span>(pre_idx)</span>
+<span id="cb6-14"><a href="#cb6-14" aria-hidden="true" tabindex="-1"></a>n_post <span class="ot">&lt;-</span> <span class="fu">length</span>(post_idx)</span>
+<span id="cb6-15"><a href="#cb6-15" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb6-16"><a href="#cb6-16" aria-hidden="true" tabindex="-1"></a>honest_res <span class="ot">&lt;-</span> </span>
+<span id="cb6-17"><a href="#cb6-17" aria-hidden="true" tabindex="-1"></a>  HonestDiD<span class="sc">::</span><span class="fu">createSensitivityResults_relativeMagnitudes</span>(</span>
+<span id="cb6-18"><a href="#cb6-18" aria-hidden="true" tabindex="-1"></a>  <span class="at">betahat       =</span> betahat[<span class="fu">c</span>(pre_idx, post_idx)],</span>
+<span id="cb6-19"><a href="#cb6-19" aria-hidden="true" tabindex="-1"></a>  <span class="at">sigma         =</span> sigma[<span class="fu">c</span>(pre_idx, post_idx), <span class="fu">c</span>(pre_idx, post_idx)],</span>
+<span id="cb6-20"><a href="#cb6-20" aria-hidden="true" tabindex="-1"></a>  <span class="at">numPrePeriods =</span> n_pre,</span>
+<span id="cb6-21"><a href="#cb6-21" aria-hidden="true" tabindex="-1"></a>  <span class="at">numPostPeriods =</span> n_post,</span>
+<span id="cb6-22"><a href="#cb6-22" aria-hidden="true" tabindex="-1"></a>  <span class="at">Mbarvec        =</span> <span class="fu">seq</span>(<span class="dv">0</span>, <span class="fl">1.5</span>, <span class="at">by =</span> <span class="fl">0.5</span>)</span>
+<span id="cb6-23"><a href="#cb6-23" aria-hidden="true" tabindex="-1"></a>)</span>
+<span id="cb6-24"><a href="#cb6-24" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb6-25"><a href="#cb6-25" aria-hidden="true" tabindex="-1"></a>sigma_plain <span class="ot">&lt;-</span> <span class="fu">matrix</span>(<span class="fu">as.numeric</span>(sigma), </span>
+<span id="cb6-26"><a href="#cb6-26" aria-hidden="true" tabindex="-1"></a>                      <span class="at">nrow =</span> <span class="fu">nrow</span>(sigma), <span class="at">ncol =</span> <span class="fu">ncol</span>(sigma))</span>
+<span id="cb6-27"><a href="#cb6-27" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb6-28"><a href="#cb6-28" aria-hidden="true" tabindex="-1"></a>originalResults <span class="ot">&lt;-</span> HonestDiD<span class="sc">::</span><span class="fu">constructOriginalCS</span>(</span>
+<span id="cb6-29"><a href="#cb6-29" aria-hidden="true" tabindex="-1"></a>    <span class="at">betahat =</span> betahat,</span>
+<span id="cb6-30"><a href="#cb6-30" aria-hidden="true" tabindex="-1"></a>    <span class="at">sigma =</span> sigma_plain,</span>
+<span id="cb6-31"><a href="#cb6-31" aria-hidden="true" tabindex="-1"></a>    <span class="at">numPrePeriods =</span> n_pre,</span>
+<span id="cb6-32"><a href="#cb6-32" aria-hidden="true" tabindex="-1"></a>    <span class="at">numPostPeriods =</span> n_post)</span>
+<span id="cb6-33"><a href="#cb6-33" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb6-34"><a href="#cb6-34" aria-hidden="true" tabindex="-1"></a>HonestDiD<span class="sc">::</span><span class="fu">createSensitivityPlot_relativeMagnitudes</span>(</span>
+<span id="cb6-35"><a href="#cb6-35" aria-hidden="true" tabindex="-1"></a>  honest_res, originalResults)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="cell-output-display">
+<div class="quarto-figure quarto-figure-center">
+<figure class="figure">
+<p><img src="chapter2_files/figure-html/honestdid-demo-1.png" class="img-fluid figure-img" width="672"></p>
+<figcaption>The sensitivity analysis of honest DiD</figcaption>
+</figure>
+</div>
+</div>
+</div>
+<p>The sensitivity analysis traces the identified set for the ATT as <span class="math inline">\(\bar M\)</span> increases from 0. A result that remains significantly positive at <span class="math inline">\(\bar M = 0.5\)</span> (say) is more credible than one that turns ambiguous at <span class="math inline">\(\bar M = 0.1\)</span>, because it shows the conclusion is robust to moderate departures from exact parallelism. <span class="citation" data-cites="rambachan2023">Rambachan &amp; Roth (<a href="references.html#ref-rambachan2023" role="doc-biblioref">2023</a>)</span> recommend reporting the <em>breakdown value of</em> <span class="math inline">\(\bar M\)</span> — the largest permitted violation at which the ATT confidence interval still excludes zero — as a standardised robustness summary alongside the main estimate.</p>
+
+
+<div id="refs" class="references csl-bib-body hanging-indent" data-entry-spacing="0" data-line-spacing="2" role="list" style="display: none">
+<div id="ref-abadie2005" class="csl-entry" role="listitem">
+Abadie, A. (2005). Semiparametric difference-in-differences estimators. <em>Review of Economic Studies</em>, <em>72</em>(1), 1–19. <a href="https://doi.org/10.1111/0034-6527.00321">https://doi.org/10.1111/0034-6527.00321</a>.
+</div>
+<div id="ref-card1994" class="csl-entry" role="listitem">
+Card, D., &amp; Krueger, A. B. (1994). Minimum wages and employment: A case study of the fast-food industry in new jersey and pennsylvania. <em>American Economic Review</em>, <em>84</em>(4), 772–793.
+</div>
+<div id="ref-eggers2024" class="csl-entry" role="listitem">
+Eggers, A. C., Tuñón, G., &amp; Dafoe, A. (2024). Placebo tests for causal inference. <em>American Journal of Political Science</em>, <em>68</em>(3), 1106–1121. <a href="https://doi.org/10.1111/ajps.12695">https://doi.org/10.1111/ajps.12695</a>.
+</div>
+<div id="ref-meyer1995" class="csl-entry" role="listitem">
+Meyer, B. D. (1995). Natural and quasi-experiments in economics. <em>Journal of Business &amp; Economic Statistics</em>, <em>13</em>(2), 151–161. <a href="https://doi.org/10.1080/07350015.1995.10524591">https://doi.org/10.1080/07350015.1995.10524591</a>.
+</div>
+<div id="ref-rambachan2023" class="csl-entry" role="listitem">
+Rambachan, A., &amp; Roth, J. (2023). A more credible approach to parallel trends. <em>Review of Economic Studies</em>, <em>90</em>(5), 2555–2591. <a href="https://doi.org/10.1093/restud/rdad018">https://doi.org/10.1093/restud/rdad018</a>.
+</div>
+<div id="ref-roth2022" class="csl-entry" role="listitem">
+Roth, J. (2022). Pretest with caution: Event-study estimates after testing for parallel trends. <em>American Economic Review: Insights</em>, <em>4</em>(3), 305–322. <a href="https://doi.org/10.1257/aeri.20210236">https://doi.org/10.1257/aeri.20210236</a>.
+</div>
+<div id="ref-santanna2020" class="csl-entry" role="listitem">
+Sant’Anna, P. H. C., &amp; Zhao, J. (2020). Doubly robust difference-in-differences estimators. <em>Journal of Econometrics</em>, <em>219</em>(1), 101–122. <a href="https://doi.org/10.1016/j.jeconom.2020.06.003">https://doi.org/10.1016/j.jeconom.2020.06.003</a>.
+</div>
+</div>
+</section>
+</section>
+
+</main> <!-- /main -->
+<script id="quarto-html-after-body" type="application/javascript">
+  window.document.addEventListener("DOMContentLoaded", function (event) {
+    const icon = "";
+    const anchorJS = new window.AnchorJS();
+    anchorJS.options = {
+      placement: 'right',
+      icon: icon
+    };
+    anchorJS.add('.anchored');
+    const isCodeAnnotation = (el) => {
+      for (const clz of el.classList) {
+        if (clz.startsWith('code-annotation-')) {                     
+          return true;
+        }
+      }
+      return false;
+    }
+    const onCopySuccess = function(e) {
+      // button target
+      const button = e.trigger;
+      // don't keep focus
+      button.blur();
+      // flash "checked"
+      button.classList.add('code-copy-button-checked');
+      var currentTitle = button.getAttribute("title");
+      button.setAttribute("title", "Copied!");
+      let tooltip;
+      if (window.bootstrap) {
+        button.setAttribute("data-bs-toggle", "tooltip");
+        button.setAttribute("data-bs-placement", "left");
+        button.setAttribute("data-bs-title", "Copied!");
+        tooltip = new bootstrap.Tooltip(button, 
+          { trigger: "manual", 
+            customClass: "code-copy-button-tooltip",
+            offset: [0, -8]});
+        tooltip.show();    
+      }
+      setTimeout(function() {
+        if (tooltip) {
+          tooltip.hide();
+          button.removeAttribute("data-bs-title");
+          button.removeAttribute("data-bs-toggle");
+          button.removeAttribute("data-bs-placement");
+        }
+        button.setAttribute("title", currentTitle);
+        button.classList.remove('code-copy-button-checked');
+      }, 1000);
+      // clear code selection
+      e.clearSelection();
+    }
+    const getTextToCopy = function(trigger) {
+      const outerScaffold = trigger.parentElement.cloneNode(true);
+      const codeEl = outerScaffold.querySelector('code');
+      for (const childEl of codeEl.children) {
+        if (isCodeAnnotation(childEl)) {
+          childEl.remove();
+        }
+      }
+      return codeEl.innerText;
+    }
+    const clipboard = new window.ClipboardJS('.code-copy-button:not([data-in-quarto-modal])', {
+      text: getTextToCopy
+    });
+    clipboard.on('success', onCopySuccess);
+    if (window.document.getElementById('quarto-embedded-source-code-modal')) {
+      const clipboardModal = new window.ClipboardJS('.code-copy-button[data-in-quarto-modal]', {
+        text: getTextToCopy,
+        container: window.document.getElementById('quarto-embedded-source-code-modal')
+      });
+      clipboardModal.on('success', onCopySuccess);
+    }
+      var localhostRegex = new RegExp(/^(?:http|https):\/\/localhost\:?[0-9]*\//);
+      var mailtoRegex = new RegExp(/^mailto:/);
+        var filterRegex = new RegExp('/' + window.location.host + '/');
+      var isInternal = (href) => {
+          return filterRegex.test(href) || localhostRegex.test(href) || mailtoRegex.test(href);
+      }
+      // Inspect non-navigation links and adorn them if external
+     var links = window.document.querySelectorAll('a[href]:not(.nav-link):not(.navbar-brand):not(.toc-action):not(.sidebar-link):not(.sidebar-item-toggle):not(.pagination-link):not(.no-external):not([aria-hidden]):not(.dropdown-item):not(.quarto-navigation-tool):not(.about-link)');
+      for (var i=0; i<links.length; i++) {
+        const link = links[i];
+        if (!isInternal(link.href)) {
+          // undo the damage that might have been done by quarto-nav.js in the case of
+          // links that we want to consider external
+          if (link.dataset.originalHref !== undefined) {
+            link.href = link.dataset.originalHref;
+          }
+        }
+      }
+    function tippyHover(el, contentFn, onTriggerFn, onUntriggerFn) {
+      const config = {
+        allowHTML: true,
+        maxWidth: 500,
+        delay: 100,
+        arrow: false,
+        appendTo: function(el) {
+            return el.parentElement;
+        },
+        interactive: true,
+        interactiveBorder: 10,
+        theme: 'quarto',
+        placement: 'bottom-start',
+      };
+      if (contentFn) {
+        config.content = contentFn;
+      }
+      if (onTriggerFn) {
+        config.onTrigger = onTriggerFn;
+      }
+      if (onUntriggerFn) {
+        config.onUntrigger = onUntriggerFn;
+      }
+      window.tippy(el, config); 
+    }
+    const noterefs = window.document.querySelectorAll('a[role="doc-noteref"]');
+    for (var i=0; i<noterefs.length; i++) {
+      const ref = noterefs[i];
+      tippyHover(ref, function() {
+        // use id or data attribute instead here
+        let href = ref.getAttribute('data-footnote-href') || ref.getAttribute('href');
+        try { href = new URL(href).hash; } catch {}
+        const id = href.replace(/^#\/?/, "");
+        const note = window.document.getElementById(id);
+        if (note) {
+          return note.innerHTML;
+        } else {
+          return "";
+        }
+      });
+    }
+    const xrefs = window.document.querySelectorAll('a.quarto-xref');
+    const processXRef = (id, note) => {
+      // Strip column container classes
+      const stripColumnClz = (el) => {
+        el.classList.remove("page-full", "page-columns");
+        if (el.children) {
+          for (const child of el.children) {
+            stripColumnClz(child);
+          }
+        }
+      }
+      stripColumnClz(note)
+      if (id === null || id.startsWith('sec-')) {
+        // Special case sections, only their first couple elements
+        const container = document.createElement("div");
+        if (note.children && note.children.length > 2) {
+          container.appendChild(note.children[0].cloneNode(true));
+          for (let i = 1; i < note.children.length; i++) {
+            const child = note.children[i];
+            if (child.tagName === "P" && child.innerText === "") {
+              continue;
+            } else {
+              container.appendChild(child.cloneNode(true));
+              break;
+            }
+          }
+          if (window.Quarto?.typesetMath) {
+            window.Quarto.typesetMath(container);
+          }
+          return container.innerHTML
+        } else {
+          if (window.Quarto?.typesetMath) {
+            window.Quarto.typesetMath(note);
+          }
+          return note.innerHTML;
+        }
+      } else {
+        // Remove any anchor links if they are present
+        const anchorLink = note.querySelector('a.anchorjs-link');
+        if (anchorLink) {
+          anchorLink.remove();
+        }
+        if (window.Quarto?.typesetMath) {
+          window.Quarto.typesetMath(note);
+        }
+        if (note.classList.contains("callout")) {
+          return note.outerHTML;
+        } else {
+          return note.innerHTML;
+        }
+      }
+    }
+    for (var i=0; i<xrefs.length; i++) {
+      const xref = xrefs[i];
+      tippyHover(xref, undefined, function(instance) {
+        instance.disable();
+        let url = xref.getAttribute('href');
+        let hash = undefined; 
+        if (url.startsWith('#')) {
+          hash = url;
+        } else {
+          try { hash = new URL(url).hash; } catch {}
+        }
+        if (hash) {
+          const id = hash.replace(/^#\/?/, "");
+          const note = window.document.getElementById(id);
+          if (note !== null) {
+            try {
+              const html = processXRef(id, note.cloneNode(true));
+              instance.setContent(html);
+            } finally {
+              instance.enable();
+              instance.show();
+            }
+          } else {
+            // See if we can fetch this
+            fetch(url.split('#')[0])
+            .then(res => res.text())
+            .then(html => {
+              const parser = new DOMParser();
+              const htmlDoc = parser.parseFromString(html, "text/html");
+              const note = htmlDoc.getElementById(id);
+              if (note !== null) {
+                const html = processXRef(id, note);
+                instance.setContent(html);
+              } 
+            }).finally(() => {
+              instance.enable();
+              instance.show();
+            });
+          }
+        } else {
+          // See if we can fetch a full url (with no hash to target)
+          // This is a special case and we should probably do some content thinning / targeting
+          fetch(url)
+          .then(res => res.text())
+          .then(html => {
+            const parser = new DOMParser();
+            const htmlDoc = parser.parseFromString(html, "text/html");
+            const note = htmlDoc.querySelector('main.content');
+            if (note !== null) {
+              // This should only happen for chapter cross references
+              // (since there is no id in the URL)
+              // remove the first header
+              if (note.children.length > 0 && note.children[0].tagName === "HEADER") {
+                note.children[0].remove();
+              }
+              const html = processXRef(null, note);
+              instance.setContent(html);
+            } 
+          }).finally(() => {
+            instance.enable();
+            instance.show();
+          });
+        }
+      }, function(instance) {
+      });
+    }
+        let selectedAnnoteEl;
+        const selectorForAnnotation = ( cell, annotation) => {
+          let cellAttr = 'data-code-cell="' + cell + '"';
+          let lineAttr = 'data-code-annotation="' +  annotation + '"';
+          const selector = 'span[' + cellAttr + '][' + lineAttr + ']';
+          return selector;
+        }
+        const selectCodeLines = (annoteEl) => {
+          const doc = window.document;
+          const targetCell = annoteEl.getAttribute("data-target-cell");
+          const targetAnnotation = annoteEl.getAttribute("data-target-annotation");
+          const annoteSpan = window.document.querySelector(selectorForAnnotation(targetCell, targetAnnotation));
+          const lines = annoteSpan.getAttribute("data-code-lines").split(",");
+          const lineIds = lines.map((line) => {
+            return targetCell + "-" + line;
+          })
+          let top = null;
+          let height = null;
+          let parent = null;
+          if (lineIds.length > 0) {
+              //compute the position of the single el (top and bottom and make a div)
+              const el = window.document.getElementById(lineIds[0]);
+              top = el.offsetTop;
+              height = el.offsetHeight;
+              parent = el.parentElement.parentElement;
+            if (lineIds.length > 1) {
+              const lastEl = window.document.getElementById(lineIds[lineIds.length - 1]);
+              const bottom = lastEl.offsetTop + lastEl.offsetHeight;
+              height = bottom - top;
+            }
+            if (top !== null && height !== null && parent !== null) {
+              // cook up a div (if necessary) and position it 
+              let div = window.document.getElementById("code-annotation-line-highlight");
+              if (div === null) {
+                div = window.document.createElement("div");
+                div.setAttribute("id", "code-annotation-line-highlight");
+                div.style.position = 'absolute';
+                parent.appendChild(div);
+              }
+              div.style.top = top - 2 + "px";
+              div.style.height = height + 4 + "px";
+              div.style.left = 0;
+              let gutterDiv = window.document.getElementById("code-annotation-line-highlight-gutter");
+              if (gutterDiv === null) {
+                gutterDiv = window.document.createElement("div");
+                gutterDiv.setAttribute("id", "code-annotation-line-highlight-gutter");
+                gutterDiv.style.position = 'absolute';
+                const codeCell = window.document.getElementById(targetCell);
+                const gutter = codeCell.querySelector('.code-annotation-gutter');
+                gutter.appendChild(gutterDiv);
+              }
+              gutterDiv.style.top = top - 2 + "px";
+              gutterDiv.style.height = height + 4 + "px";
+            }
+            selectedAnnoteEl = annoteEl;
+          }
+        };
+        const unselectCodeLines = () => {
+          const elementsIds = ["code-annotation-line-highlight", "code-annotation-line-highlight-gutter"];
+          elementsIds.forEach((elId) => {
+            const div = window.document.getElementById(elId);
+            if (div) {
+              div.remove();
+            }
+          });
+          selectedAnnoteEl = undefined;
+        };
+          // Handle positioning of the toggle
+      window.addEventListener(
+        "resize",
+        throttle(() => {
+          elRect = undefined;
+          if (selectedAnnoteEl) {
+            selectCodeLines(selectedAnnoteEl);
+          }
+        }, 10)
+      );
+      function throttle(fn, ms) {
+      let throttle = false;
+      let timer;
+        return (...args) => {
+          if(!throttle) { // first call gets through
+              fn.apply(this, args);
+              throttle = true;
+          } else { // all the others get throttled
+              if(timer) clearTimeout(timer); // cancel #2
+              timer = setTimeout(() => {
+                fn.apply(this, args);
+                timer = throttle = false;
+              }, ms);
+          }
+        };
+      }
+        // Attach click handler to the DT
+        const annoteDls = window.document.querySelectorAll('dt[data-target-cell]');
+        for (const annoteDlNode of annoteDls) {
+          annoteDlNode.addEventListener('click', (event) => {
+            const clickedEl = event.target;
+            if (clickedEl !== selectedAnnoteEl) {
+              unselectCodeLines();
+              const activeEl = window.document.querySelector('dt[data-target-cell].code-annotation-active');
+              if (activeEl) {
+                activeEl.classList.remove('code-annotation-active');
+              }
+              selectCodeLines(clickedEl);
+              clickedEl.classList.add('code-annotation-active');
+            } else {
+              // Unselect the line
+              unselectCodeLines();
+              clickedEl.classList.remove('code-annotation-active');
+            }
+          });
+        }
+    const findCites = (el) => {
+      const parentEl = el.parentElement;
+      if (parentEl) {
+        const cites = parentEl.dataset.cites;
+        if (cites) {
+          return {
+            el,
+            cites: cites.split(' ')
+          };
+        } else {
+          return findCites(el.parentElement)
+        }
+      } else {
+        return undefined;
+      }
+    };
+    var bibliorefs = window.document.querySelectorAll('a[role="doc-biblioref"]');
+    for (var i=0; i<bibliorefs.length; i++) {
+      const ref = bibliorefs[i];
+      const citeInfo = findCites(ref);
+      if (citeInfo) {
+        tippyHover(citeInfo.el, function() {
+          var popup = window.document.createElement('div');
+          citeInfo.cites.forEach(function(cite) {
+            var citeDiv = window.document.createElement('div');
+            citeDiv.classList.add('hanging-indent');
+            citeDiv.classList.add('csl-entry');
+            var biblioDiv = window.document.getElementById('ref-' + cite);
+            if (biblioDiv) {
+              citeDiv.innerHTML = biblioDiv.innerHTML;
+            }
+            popup.appendChild(citeDiv);
+          });
+          return popup.innerHTML;
+        });
+      }
+    }
+  });
+  </script>
+<nav class="page-navigation">
+  <div class="nav-page nav-page-previous">
+      <a href="./intro.html" class="pagination-link" aria-label="Introduction">
+        <i class="bi bi-arrow-left-short"></i> <span class="nav-page-text"><span class="chapter-number">1</span>&nbsp; <span class="chapter-title">Introduction</span></span>
+      </a>          
+  </div>
+  <div class="nav-page nav-page-next">
+      <a href="./chapter3.html" class="pagination-link" aria-label="Covariate Adjustment: IPW and Doubly Robust DiD">
+        <span class="nav-page-text"><span class="chapter-number">3</span>&nbsp; <span class="chapter-title">Covariate Adjustment: IPW and Doubly Robust DiD</span></span> <i class="bi bi-arrow-right-short"></i>
+      </a>
+  </div>
+</nav>
+</div> <!-- /content -->
+
+
+
+
+</body></html>

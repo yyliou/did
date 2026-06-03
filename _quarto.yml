@@ -1,0 +1,42 @@
+project:
+  type: book
+  output-dir: .
+
+book:
+  title: "DiD Notes"
+  author: "Yu-You Liou"
+  date: "today"
+  repo-url: https://github.com/yyliou
+  chapters:
+    - index.qmd
+    - part: "Part I — Introduction"
+      chapters:
+        - intro.qmd
+    - part: "Part II — Identification Assumptions"
+      chapters:
+        - chapter2.qmd
+        - chapter3.qmd
+    - references.qmd
+  downloads: [pdf]
+
+number-sections: true
+
+bibliography: references.bib
+csl: apa.csl
+link-citations: true
+
+format:
+  html:
+    theme:
+      - cosmo
+      - brand
+  pdf:
+    documentclass: scrreprt
+    colorlinks: true
+    citecolor: blue
+    linkcolor: blue
+    urlcolor: blue
+
+editor: visual
+
+# quarto render

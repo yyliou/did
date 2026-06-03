@@ -1,0 +1,479 @@
+---
+title: "Comparing CSDID Estimators: Algorithms, Base Periods, and Software"
+author: ""
+date: "`r Sys.Date()`"
+output:
+  pdf_document:
+    toc: true
+    toc_depth: 3
+    number_sections: true
+    latex_engine: xelatex
+    keep_tex: false
+header-includes:
+  - \usepackage{booktabs}
+  - \usepackage{longtable}
+  - \usepackage{float}
+  - \usepackage{caption}
+  - \usepackage{xcolor}
+  - \usepackage{geometry}
+  - \geometry{margin=2.5cm}
+  - \captionsetup[table]{skip=5pt}
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(
+  echo    = TRUE,
+  warning = FALSE,
+  message = FALSE,
+  fig.align = "center",
+  fig.width = 7,
+  fig.height = 4.5,
+  out.width = "95%"
+)
+```
+
+```{r packages}
+# ── Core DiD packages ──────────────────────────────────────────────────────────
+library(did)         # Callaway & Sant'Anna (C&S) — att_gt()
+library(fixest)      # Sun & Abraham via sunab()
+library(staggered)   # Roth & Sant'Anna staggered estimator
+
+# ── Output / helpers ──────────────────────────────────────────────────────────
+library(dplyr)
+library(tidyr)
+library(ggplot2)
+library(kableExtra)
+library(patchwork)
+
+# ── Stata integration (requires Stata on PATH) ────────────────────────────────
+# library(Statamarkdown)   # uncomment if Stata is available
+```
+
+---
+
+# Data
+
+We use the `mpdta` dataset from the **did** package — a balanced panel of
+county-level teen employment rates across 500 counties, where counties are
+treated at different calendar years (staggered adoption).
+
+```{r data}
+data(mpdta, package = "did")
+
+# Quick overview
+head(mpdta)
+cat(sprintf(
+  "Counties: %d | Years: %s | Treatment cohorts: %s\n",
+  n_distinct(mpdta$countyreal),
+  paste(sort(unique(mpdta$year)),    collapse = ", "),
+  paste(sort(unique(mpdta$first.treat[mpdta$first.treat > 0])), collapse = ", ")
+))
+```
+
+The outcome is `lemp` (log teen employment), the unit ID is `countyreal`,
+the time variable is `year`, and `first.treat` gives the first treatment period
+(0 = never treated).
+
+---
+
+# Part A: Comparing Estimation Algorithms (`did::att_gt`)
+
+`att_gt()` from the **did** package supports three estimation methods:
+
+| Method | Description |
+|--------|-------------|
+| `"dr"` | Doubly-Robust IPW (default) — combines outcome regression + propensity score |
+| `"ipw"` | Inverse Probability Weighting only |
+| `"reg"` | Outcome Regression only |
+
+```{r algo-est, cache=TRUE}
+run_attgt <- function(method, control = "nevertreated") {
+  did::att_gt(
+    yname         = "lemp",
+    tname         = "year",
+    idname        = "countyreal",
+    gname         = "first.treat",
+    data          = mpdta,
+    est_method    = method,
+    control_group = control
+  )
+}
+
+fit_dr   <- run_attgt("dr")
+fit_ipw  <- run_attgt("ipw")
+fit_reg  <- run_attgt("reg")
+```
+
+## ATT(g,t) Comparison
+
+```{r algo-tbl, results='asis'}
+extract_att <- function(fit, label) {
+  ag <- did::aggte(fit, type = "simple")
+  data.frame(
+    Method   = label,
+    ATT      = round(ag$overall.att, 4),
+    SE       = round(ag$overall.se,  4),
+    CI_lower = round(ag$overall.att - 1.96 * ag$overall.se, 4),
+    CI_upper = round(ag$overall.att + 1.96 * ag$overall.se, 4)
+  )
+}
+
+algo_tbl <- bind_rows(
+  extract_att(fit_dr,  "DR-IPW"),
+  extract_att(fit_ipw, "IPW"),
+  extract_att(fit_reg, "Regression")
+)
+
+kable(
+  algo_tbl,
+  caption = "Overall ATT by Estimation Algorithm (csdid, never-treated control)",
+  booktabs = TRUE, linesep = ""
+) |>
+  kable_styling(latex_options = c("hold_position"))
+```
+
+## Event-Study Plots by Algorithm
+
+```{r algo-event, fig.height=7}
+es_plot <- function(fit, title) {
+  es <- did::aggte(fit, type = "dynamic")
+  df <- data.frame(
+    e    = es$egt,
+    att  = es$att.egt,
+    se   = es$se.egt
+  ) |>
+    mutate(lo = att - 1.96*se, hi = att + 1.96*se)
+
+  ggplot(df, aes(x = e, y = att)) +
+    geom_hline(yintercept = 0, linetype = "dashed", colour = "grey50") +
+    geom_vline(xintercept = -0.5, linetype = "dotted", colour = "grey50") +
+    geom_ribbon(aes(ymin = lo, ymax = hi), alpha = 0.2, fill = "steelblue") +
+    geom_line(colour = "steelblue") +
+    geom_point(colour = "steelblue") +
+    labs(title = title, x = "Event time", y = "ATT") +
+    theme_bw(base_size = 11)
+}
+
+p1 <- es_plot(fit_dr,  "DR-IPW")
+p2 <- es_plot(fit_ipw, "IPW")
+p3 <- es_plot(fit_reg, "Regression")
+
+(p1 | p2 | p3) +
+  plot_annotation(title = "Event-Study: Algorithm Comparison",
+                  theme = theme(plot.title = element_text(size = 13, face = "bold")))
+```
+
+**Takeaway.** The DR-IPW estimator is doubly robust — it remains consistent if
+either the propensity score or the outcome model is correctly specified. The
+three estimators typically agree closely on well-behaved data; divergence signals
+model mis-specification.
+
+---
+
+# Part B: Comparing Base Periods (Control Group)
+
+C&S allows two choices for the comparison group:
+
+| Option | Description |
+|--------|-------------|
+| `"nevertreated"` | Only units never treated serve as control |
+| `"notyettreated"` | Units not yet treated at time $t$ serve as control |
+
+The choice matters when the "not-yet-treated" group may itself be partially
+contaminated by anticipation or when never-treated units are few.
+
+```{r base-est, cache=TRUE}
+fit_never  <- run_attgt("dr", control = "nevertreated")
+fit_notyet <- run_attgt("dr", control = "notyettreated")
+```
+
+## Overall ATT Comparison
+
+```{r base-tbl, results='asis'}
+base_tbl <- bind_rows(
+  extract_att(fit_never,  "Never treated"),
+  extract_att(fit_notyet, "Not yet treated")
+)
+
+kable(
+  base_tbl,
+  caption = "Overall ATT by Control Group Choice (DR-IPW)",
+  booktabs = TRUE, linesep = ""
+) |>
+  kable_styling(latex_options = c("hold_position"))
+```
+
+## Event-Study Plots by Base Period
+
+```{r base-event, fig.height=4.5}
+p_never  <- es_plot(fit_never,  "Never treated")
+p_notyet <- es_plot(fit_notyet, "Not yet treated")
+
+(p_never | p_notyet) +
+  plot_annotation(title = "Event-Study: Control Group Comparison",
+                  theme = theme(plot.title = element_text(size = 13, face = "bold")))
+```
+
+## ATT(g,t) Heat Map
+
+```{r base-heat, fig.height=5}
+att_matrix <- function(fit, label) {
+  data.frame(
+    g      = fit$group,
+    t      = fit$t,
+    att    = fit$att,
+    source = label
+  )
+}
+
+heat_df <- bind_rows(
+  att_matrix(fit_never,  "Never treated"),
+  att_matrix(fit_notyet, "Not yet treated")
+) |>
+  filter(g > 0)
+
+ggplot(heat_df, aes(x = factor(t), y = factor(g), fill = att)) +
+  geom_tile(colour = "white") +
+  scale_fill_gradient2(low = "firebrick", mid = "white", high = "steelblue",
+                       midpoint = 0, name = "ATT(g,t)") +
+  facet_wrap(~source) +
+  labs(title = "ATT(g,t) by Control Group",
+       x = "Calendar time t", y = "Cohort g") +
+  theme_bw(base_size = 10) +
+  theme(axis.text.x = element_text(angle = 45, hjust = 1))
+```
+
+**Takeaway.** With many treated cohorts and few never-treated units,
+`"notyettreated"` gives more precise estimates but requires assuming no
+anticipation among later-treated units. The two choices converge when the panel
+is large and staggering is moderate.
+
+---
+
+# Part C: Comparing Software Packages
+
+## R Packages
+
+We compare three R packages against the baseline `did::att_gt()` DR result
+already estimated in Part A (`fit_dr`):
+
+| Package | Estimator | Notes |
+|---------|-----------|-------|
+| `did` (`att_gt`) | Callaway & Sant'Anna (2021) | DR-IPW, never-treated; baseline |
+| `fixest` | Sun & Abraham (2021) via `sunab()` | TWFE-based, fast |
+| `staggered` | Roth & Sant'Anna (2023) | Efficiency-optimised |
+
+### `did` (baseline — already estimated)
+
+```{r pkg-did}
+att_did <- did::aggte(fit_dr, type = "simple")
+cat(sprintf("did::att_gt | ATT = %.4f | SE = %.4f\n",
+            att_did$overall.att, att_did$overall.se))
+```
+
+### `fixest` (Sun & Abraham)
+
+```{r pkg-fixest}
+# Encode cohort for sunab()
+mpdta2 <- mpdta |>
+  mutate(cohort = if_else(first.treat == 0, Inf, as.numeric(first.treat)))
+
+fit_sa <- feols(
+  lemp ~ sunab(cohort, year) | countyreal + year,
+  data    = mpdta2,
+  cluster = ~countyreal
+)
+# Aggregate: simple average over all (cohort, t) post-treatment cells
+coefs_sa <- coef(fit_sa)
+se_sa    <- se(fit_sa)
+post     <- as.numeric(sub(".*::([-0-9]+)$", "\\1", names(coefs_sa)))
+post_idx <- post >= 0
+
+att_sa <- mean(coefs_sa[post_idx])
+se_sa_agg <- sqrt(mean(se_sa[post_idx]^2))   # conservative; for SE use iplot()
+cat(sprintf("fixest  | ATT = %.4f | SE ≈ %.4f (naive avg)\n", att_sa, se_sa_agg))
+```
+
+### `staggered`
+
+```{r pkg-staggered, cache=TRUE}
+fit_stag <- staggered::staggered(
+  df       = mpdta,
+  i        = "countyreal",
+  t        = "year",
+  g        = "first.treat",
+  y        = "lemp",
+  estimand = "simple"
+)
+cat(sprintf("staggered | ATT = %.4f | SE = %.4f\n",
+            fit_stag$estimate, fit_stag$se))
+```
+
+### Summary Table
+
+```{r pkg-summary, results='asis'}
+pkg_tbl <- tribble(
+  ~Package,     ~Estimator,          ~ATT,                 ~SE,
+  "did",        "C&S DR-IPW",        att_did$overall.att,  att_did$overall.se,
+  "fixest",     "Sun & Abraham",     att_sa,               se_sa_agg,
+  "staggered",  "Roth & Sant'Anna",  fit_stag$estimate,    fit_stag$se
+) |>
+  mutate(
+    ATT      = round(ATT, 4),
+    SE       = round(SE, 4),
+    CI_lower = round(ATT - 1.96*SE, 4),
+    CI_upper = round(ATT + 1.96*SE, 4)
+  )
+
+kable(
+  pkg_tbl,
+  caption = "Overall ATT by R Package",
+  booktabs = TRUE, linesep = ""
+) |>
+  kable_styling(latex_options = c("hold_position"))
+```
+
+### Coefficient Plot
+
+```{r pkg-coefplot, fig.height=3.5}
+ggplot(pkg_tbl, aes(x = Package, y = ATT,
+                    ymin = CI_lower, ymax = CI_upper,
+                    colour = Package)) +
+  geom_hline(yintercept = 0, linetype = "dashed", colour = "grey50") +
+  geom_pointrange(size = 0.8, linewidth = 0.8) +
+  coord_flip() +
+  scale_colour_brewer(palette = "Set1", guide = "none") +
+  labs(title = "Overall ATT: R Package Comparison",
+       x = NULL, y = "ATT (95% CI)") +
+  theme_bw(base_size = 11)
+```
+
+---
+
+## Stata via `Statamarkdown`
+
+The chunk below runs **Stata** code directly inside R Markdown using the
+`Statamarkdown` package. Requires Stata to be installed and its executable on
+`PATH`. Set `eval=TRUE` when running on a machine with Stata.
+
+```{stata stata-setup, eval=FALSE, collectcode=TRUE}
+* ── Install csdid if needed ──────────────────────────────────────────────────
+* ssc install csdid, replace
+* ssc install drdid, replace
+
+* ── Load data (export from R first, or use a Stata .dta) ────────────────────
+* Here we assume mpdta.dta has been written by R with:
+*   haven::write_dta(mpdta, "mpdta.dta")
+use "mpdta.dta", clear
+
+xtset countyreal year
+```
+
+```{stata stata-dripw, eval=FALSE}
+* ── A. Default: DR-IPW, never-treated control ────────────────────────────────
+csdid lemp, ivar(countyreal) time(year) gvar(first_treat) ///
+    method(dripw) notyet(0)
+
+* Aggregate to overall ATT
+estat simple
+```
+
+```{stata stata-ipw, eval=FALSE}
+* ── B. IPW only ──────────────────────────────────────────────────────────────
+csdid lemp, ivar(countyreal) time(year) gvar(first_treat) ///
+    method(ipw) notyet(0)
+estat simple
+```
+
+```{stata stata-reg, eval=FALSE}
+* ── C. Regression only ───────────────────────────────────────────────────────
+csdid lemp, ivar(countyreal) time(year) gvar(first_treat) ///
+    method(reg) notyet(0)
+estat simple
+```
+
+```{stata stata-notyettreat, eval=FALSE}
+* ── D. DR-IPW, not-yet-treated control ───────────────────────────────────────
+csdid lemp, ivar(countyreal) time(year) gvar(first_treat) ///
+    method(dripw) notyet(1)
+estat simple
+```
+
+```{stata stata-event, eval=FALSE}
+* ── E. Event-study plot ──────────────────────────────────────────────────────
+csdid lemp, ivar(countyreal) time(year) gvar(first_treat) method(dripw)
+csdid_plot, style(rspike)
+graph export "stata_eventstudy.png", replace
+```
+
+> **Note on `Statamarkdown`.**
+> Add `library(Statamarkdown)` to the setup chunk and set
+> `stataexe = "/path/to/stata"` in `knitr::opts_chunk$set()` (or via the
+> `STATA_EXECUTABLE` environment variable). Set `eval=TRUE` on each Stata chunk
+> once Stata is available.
+> Alternatively, export results from Stata as `.csv` or `.dta` and read them
+> into R for a unified comparison table.
+
+---
+
+# Summary Comparison
+
+```{r summary-all, results='asis'}
+# Combine all R results into one master table
+all_results <- bind_rows(
+  # Part A: algorithms
+  extract_att(fit_dr,  "did · DR")    |> mutate(Dimension = "Algorithm"),
+  extract_att(fit_ipw, "did · IPW")   |> mutate(Dimension = "Algorithm"),
+  extract_att(fit_reg, "did · Reg")   |> mutate(Dimension = "Algorithm"),
+  # Part B: base period
+  extract_att(fit_never,  "did · Never")   |> mutate(Dimension = "Base period"),
+  extract_att(fit_notyet, "did · NotYet")  |> mutate(Dimension = "Base period"),
+  # Part C: packages
+  data.frame(Method="did · att_gt",         ATT=att_did$overall.att,
+             SE=att_did$overall.se,
+             CI_lower=att_did$overall.att-1.96*att_did$overall.se,
+             CI_upper=att_did$overall.att+1.96*att_did$overall.se,
+             Dimension="Package"),
+  data.frame(Method="fixest · Sun-Abraham", ATT=att_sa, SE=se_sa_agg,
+             CI_lower=att_sa-1.96*se_sa_agg, CI_upper=att_sa+1.96*se_sa_agg,
+             Dimension="Package"),
+  data.frame(Method="staggered · R&S",      ATT=fit_stag$estimate, SE=fit_stag$se,
+             CI_lower=fit_stag$estimate-1.96*fit_stag$se,
+             CI_upper=fit_stag$estimate+1.96*fit_stag$se,
+             Dimension="Package")
+) |>
+  mutate(across(where(is.numeric), ~round(., 4))) |>
+  select(Dimension, Method, ATT, SE, CI_lower, CI_upper)
+
+kable(
+  all_results,
+  caption = "Master Comparison: All Dimensions",
+  booktabs = TRUE, linesep = ""
+) |>
+  kable_styling(latex_options = c("hold_position", "scale_down")) |>
+  pack_rows(index = table(all_results$Dimension)) |>
+  column_spec(1, bold = TRUE)
+```
+
+```{r summary-plot, fig.height=5}
+ggplot(all_results,
+       aes(x = reorder(Method, ATT), y = ATT,
+           ymin = CI_lower, ymax = CI_upper,
+           colour = Dimension)) +
+  geom_hline(yintercept = 0, linetype = "dashed", colour = "grey60") +
+  geom_pointrange(size = 0.7, linewidth = 0.7) +
+  coord_flip() +
+  facet_wrap(~Dimension, scales = "free_y", ncol = 1) +
+  scale_colour_brewer(palette = "Set2", guide = "none") +
+  labs(title = "Overall ATT: Master Comparison",
+       x = NULL, y = "ATT (95% CI)") +
+  theme_bw(base_size = 11)
+```
+
+---
+
+# Session Info
+
+```{r session}
+sessionInfo()
+```

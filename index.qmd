@@ -1,0 +1,67 @@
+
+
+# Preface {.unnumbered}
+
+Difference-in-differences (DiD) is among the most widely used identification
+strategies in empirical economics.  For decades, the two-way fixed effects
+(TWFE) regression served as its canonical implementation.  Beginning in the late
+2010s, however, a surge of methodological work revealed that TWFE can produce
+severely biased — and even sign-reversed — estimates when treatment adoption is
+staggered and effects are heterogeneous.  These notes document the resulting
+"new DiD" literature: its theoretical foundations, its failure modes, and the
+modern estimators developed in response.
+
+## Structure
+
+- **Part I — Introduction.**
+  The canonical $2 \times 2$ setup, the potential outcomes framework and ATT,
+  and TWFE as a multi-period generalisation.  The closing section surveys the
+  recent methodological debates that motivate the remainder of the notes.
+
+- **Part II — Identification Assumptions.**
+  The core of DiD identification is the parallel trends assumption (PTA).
+  @roth2022 showed that the common practice of conditioning on a passed
+  pre-trend test distorts the sampling distribution of post-treatment estimates,
+  producing size distortions and reduced power.  When the PTA is plausible only
+  after conditioning on observables, @abadie2005 proposed an IPW-DiD estimator,
+  and @santanna2020 extended this to a doubly robust (DR-DiD) procedure; for
+  high-dimensional covariates, @chernozhukov2018 developed double/debiased
+  machine learning (DML), adapted to the DiD setting by @chang2020.  When
+  unobserved time-varying shocks threaten the PTA entirely, @arkhangelsky2021
+  combined synthetic control weights with DiD (SDID), and @rambachan2023
+  proposed honest sensitivity analysis that bounds inference under partial
+  violations of parallel trends.  The part also covers partial compliance:
+  @imbens1994 established the LATE framework, and @chaisemartin2015 extended
+  it to fuzzy DiD via the Wald-DiD estimator.
+
+- **Part III — Staggered Adoption.**
+  @goodman2021 showed that under staggered treatment timing the TWFE coefficient
+  is a variance-weighted average of all possible $2 \times 2$ sub-comparisons —
+  some of which carry negative weights, because already-treated units are used as
+  implicit controls for later-treated units.  This diagnosis sparked a wave of
+  robust estimators: @callaway2021 proposed group-time ATTs using never- or
+  not-yet-treated units as clean controls; @borusyak2024 developed an imputation
+  approach that fits TWFE only on untreated observations; @sun2021 proposed an
+  interaction-weighted estimator for heterogeneity-robust event studies;
+  @chaisemartin2020 derived a robust estimator accommodating treatment switching;
+  and @roth2023 derived the semiparametrically efficient estimator for staggered
+  rollout designs, nesting the above approaches while supporting both
+  $t$-based and permutation inference.
+
+- **Part IV — Heterogeneous Effects and Extensions.**
+  @athey2006 departed from the additive error structure underlying standard DiD
+  and proposed the changes-in-changes (CiC) model, which identifies the full
+  counterfactual distribution under non-separable unobservables.  For
+  non-negative, binary, or fractional outcomes, @wooldridge2023 showed how
+  pooled quasi-MLE within the linear exponential family circumvents the incidental
+  parameters problem in staggered designs.  @callaway2024 demonstrated that naive
+  continuous-treatment TWFE suffers from analogous negative-weight problems and
+  proposed causal dose-response functions under generalised parallel trends.  The
+  part also covers triple-differences (DDD) and quantile DiD.
+
+## Audience
+
+These notes assume familiarity with linear regression, panel data methods, and
+the potential outcomes framework, at the level of a first-year graduate course
+in econometrics
+

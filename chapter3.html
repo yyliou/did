@@ -1,0 +1,1471 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml" lang="en" xml:lang="en"><head>
+
+<meta charset="utf-8">
+<meta name="generator" content="quarto-1.9.37">
+
+<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
+
+
+<title>3&nbsp; Covariate Adjustment: IPW and Doubly Robust DiD – DiD Notes</title>
+<style>
+/* Default styles provided by pandoc.
+** See https://pandoc.org/MANUAL.html#variables-for-html for config info.
+*/
+code{white-space: pre-wrap;}
+span.smallcaps{font-variant: small-caps;}
+div.columns{display: flex; gap: min(4vw, 1.5em);}
+div.column{flex: auto; overflow-x: auto;}
+div.hanging-indent{margin-left: 1.5em; text-indent: -1.5em;}
+ul.task-list{list-style: none;}
+ul.task-list li input[type="checkbox"] {
+  width: 0.8em;
+  margin: 0 0.8em 0.2em -1em; /* quarto-specific, see https://github.com/quarto-dev/quarto-cli/issues/4556 */ 
+  vertical-align: middle;
+}
+/* CSS for syntax highlighting */
+html { -webkit-text-size-adjust: 100%; }
+pre > code.sourceCode { white-space: pre; position: relative; }
+pre > code.sourceCode > span { display: inline-block; line-height: 1.25; }
+pre > code.sourceCode > span:empty { height: 1.2em; }
+.sourceCode { overflow: visible; }
+code.sourceCode > span { color: inherit; text-decoration: inherit; }
+div.sourceCode { margin: 1em 0; }
+pre.sourceCode { margin: 0; }
+@media screen {
+div.sourceCode { overflow: auto; }
+}
+@media print {
+pre > code.sourceCode { white-space: pre-wrap; }
+pre > code.sourceCode > span { text-indent: -5em; padding-left: 5em; }
+}
+pre.numberSource code
+  { counter-reset: source-line 0; }
+pre.numberSource code > span
+  { position: relative; left: -4em; counter-increment: source-line; }
+pre.numberSource code > span > a:first-child::before
+  { content: counter(source-line);
+    position: relative; left: -1em; text-align: right; vertical-align: baseline;
+    border: none; display: inline-block;
+    -webkit-touch-callout: none; -webkit-user-select: none;
+    -khtml-user-select: none; -moz-user-select: none;
+    -ms-user-select: none; user-select: none;
+    padding: 0 4px; width: 4em;
+  }
+pre.numberSource { margin-left: 3em;  padding-left: 4px; }
+div.sourceCode
+  {   }
+@media screen {
+pre > code.sourceCode > span > a:first-child::before { text-decoration: underline; }
+}
+/* CSS for citations */
+div.csl-bib-body { }
+div.csl-entry {
+  clear: both;
+  margin-bottom: 0em;
+}
+.hanging-indent div.csl-entry {
+  margin-left:2em;
+  text-indent:-2em;
+}
+div.csl-left-margin {
+  min-width:2em;
+  float:left;
+}
+div.csl-right-inline {
+  margin-left:2em;
+  padding-left:1em;
+}
+div.csl-indent {
+  margin-left: 2em;
+}</style>
+
+
+<script src="site_libs/quarto-nav/quarto-nav.js"></script>
+<script src="site_libs/quarto-nav/headroom.min.js"></script>
+<script src="site_libs/clipboard/clipboard.min.js"></script>
+<script src="site_libs/quarto-search/autocomplete.umd.js"></script>
+<script src="site_libs/quarto-search/fuse.min.js"></script>
+<script src="site_libs/quarto-search/quarto-search.js"></script>
+<meta name="quarto:offset" content="./">
+<link href="./references.html" rel="next">
+<link href="./chapter2.html" rel="prev">
+<script src="site_libs/quarto-html/quarto.js" type="module"></script>
+<script src="site_libs/quarto-html/tabsets/tabsets.js" type="module"></script>
+<script src="site_libs/quarto-html/popper.min.js"></script>
+<script src="site_libs/quarto-html/tippy.umd.min.js"></script>
+<script src="site_libs/quarto-html/anchor.min.js"></script>
+<link href="site_libs/quarto-html/tippy.css" rel="stylesheet">
+<link href="site_libs/quarto-html/quarto-syntax-highlighting-7f8f88aac4f3542376d5c11b86a4c14d.css" rel="stylesheet" id="quarto-text-highlighting-styles">
+<script src="site_libs/bootstrap/bootstrap.min.js"></script>
+<link href="site_libs/bootstrap/bootstrap-icons.css" rel="stylesheet">
+<link href="site_libs/bootstrap/bootstrap-5ccb035bea26c1e21f80f44cf7c27909.min.css" rel="stylesheet" append-hash="true" id="quarto-bootstrap" data-mode="light">
+<script id="quarto-search-options" type="application/json">{
+  "location": "sidebar",
+  "copy-button": false,
+  "collapse-after": 3,
+  "panel-placement": "start",
+  "type": "textbox",
+  "limit": 50,
+  "keyboard-shortcut": [
+    "f",
+    "/",
+    "s"
+  ],
+  "show-item-context": false,
+  "language": {
+    "search-no-results-text": "No results",
+    "search-matching-documents-text": "matching documents",
+    "search-copy-link-title": "Copy link to search",
+    "search-hide-matches-text": "Hide additional matches",
+    "search-more-match-text": "more match in this document",
+    "search-more-matches-text": "more matches in this document",
+    "search-clear-button-title": "Clear",
+    "search-text-placeholder": "",
+    "search-detached-cancel-button-title": "Cancel",
+    "search-submit-button-title": "Submit",
+    "search-label": "Search"
+  }
+}</script>
+
+  <script src="https://cdnjs.cloudflare.com/polyfill/v3/polyfill.min.js?features=es6"></script>
+  <script defer="" src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-chtml-full.js" type="text/javascript"></script>
+
+<script type="text/javascript">
+const typesetMath = (el) => {
+  if (window.MathJax) {
+    // MathJax Typeset
+    window.MathJax.typeset([el]);
+  } else if (window.katex) {
+    // KaTeX Render
+    var mathElements = el.getElementsByClassName("math");
+    var macros = [];
+    for (var i = 0; i < mathElements.length; i++) {
+      var texText = mathElements[i].firstChild;
+      if (mathElements[i].tagName == "SPAN" && texText && texText.data) {
+        window.katex.render(texText.data, mathElements[i], {
+          displayMode: mathElements[i].classList.contains('display'),
+          throwOnError: false,
+          macros: macros,
+          fleqn: false
+        });
+      }
+    }
+  }
+}
+window.Quarto = {
+  typesetMath
+};
+</script>
+
+</head>
+
+<body class="nav-sidebar floating quarto-light">
+
+<div id="quarto-search-results"></div>
+  <header id="quarto-header" class="headroom fixed-top">
+  <nav class="quarto-secondary-nav">
+    <div class="container-fluid d-flex">
+      <button type="button" class="quarto-btn-toggle btn" data-bs-toggle="collapse" role="button" data-bs-target=".quarto-sidebar-collapse-item" aria-controls="quarto-sidebar" aria-expanded="false" aria-label="Toggle sidebar navigation" onclick="if (window.quartoToggleHeadroom) { window.quartoToggleHeadroom(); }">
+        <i class="bi bi-layout-text-sidebar-reverse"></i>
+      </button>
+        <nav class="quarto-page-breadcrumbs" aria-label="breadcrumb"><ol class="breadcrumb"><li class="breadcrumb-item"><a href="./chapter2.html">Part II — Identification Assumptions</a></li><li class="breadcrumb-item"><a href="./chapter3.html"><span class="chapter-number">3</span>&nbsp; <span class="chapter-title">Covariate Adjustment: IPW and Doubly Robust DiD</span></a></li></ol></nav>
+        <a class="flex-grow-1" role="navigation" data-bs-toggle="collapse" data-bs-target=".quarto-sidebar-collapse-item" aria-controls="quarto-sidebar" aria-expanded="false" aria-label="Toggle sidebar navigation" onclick="if (window.quartoToggleHeadroom) { window.quartoToggleHeadroom(); }">      
+        </a>
+      <button type="button" class="btn quarto-search-button" aria-label="Search" onclick="window.quartoOpenSearch();">
+        <i class="bi bi-search"></i>
+      </button>
+    </div>
+  </nav>
+</header>
+<!-- content -->
+<div id="quarto-content" class="quarto-container page-columns page-rows-contents page-layout-article">
+<!-- sidebar -->
+  <nav id="quarto-sidebar" class="sidebar collapse collapse-horizontal quarto-sidebar-collapse-item sidebar-navigation floating overflow-auto">
+    <div class="pt-lg-2 mt-2 text-left sidebar-header">
+    <div class="sidebar-title mb-0 py-0">
+      <a href="./">DiD Notes</a> 
+        <div class="sidebar-tools-main">
+    <a href="https://github.com/yyliou" title="Source Code" class="quarto-navigation-tool px-1" aria-label="Source Code"><i class="bi bi-github"></i></a>
+    <a href="./DiD-Notes.pdf" title="Download PDF" class="quarto-navigation-tool px-1" aria-label="Download PDF"><i class="bi bi-file-pdf"></i></a>
+</div>
+    </div>
+      </div>
+        <div class="mt-2 flex-shrink-0 align-items-center">
+        <div class="sidebar-search">
+        <div id="quarto-search" class="" title="Search"></div>
+        </div>
+        </div>
+    <div class="sidebar-menu-container"> 
+    <ul class="list-unstyled mt-1">
+        <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./index.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">Preface</span></a>
+  </div>
+</li>
+        <li class="sidebar-item sidebar-item-section">
+      <div class="sidebar-item-container"> 
+            <a class="sidebar-item-text sidebar-link text-start" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-1" role="navigation" aria-expanded="true">
+ <span class="menu-text">Part I — Introduction</span></a>
+          <a class="sidebar-item-toggle text-start" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-1" role="navigation" aria-expanded="true" aria-label="Toggle section">
+            <i class="bi bi-chevron-right ms-2"></i>
+          </a> 
+      </div>
+      <ul id="quarto-sidebar-section-1" class="collapse list-unstyled sidebar-section depth1 show">  
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./intro.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text"><span class="chapter-number">1</span>&nbsp; <span class="chapter-title">Introduction</span></span></a>
+  </div>
+</li>
+      </ul>
+  </li>
+        <li class="sidebar-item sidebar-item-section">
+      <div class="sidebar-item-container"> 
+            <a class="sidebar-item-text sidebar-link text-start" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-2" role="navigation" aria-expanded="true">
+ <span class="menu-text">Part II — Identification Assumptions</span></a>
+          <a class="sidebar-item-toggle text-start" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-2" role="navigation" aria-expanded="true" aria-label="Toggle section">
+            <i class="bi bi-chevron-right ms-2"></i>
+          </a> 
+      </div>
+      <ul id="quarto-sidebar-section-2" class="collapse list-unstyled sidebar-section depth1 show">  
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./chapter2.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text"><span class="chapter-number">2</span>&nbsp; <span class="chapter-title">Identification: Assumptions, Violations, and Tests</span></span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./chapter3.html" class="sidebar-item-text sidebar-link active">
+ <span class="menu-text"><span class="chapter-number">3</span>&nbsp; <span class="chapter-title">Covariate Adjustment: IPW and Doubly Robust DiD</span></span></a>
+  </div>
+</li>
+      </ul>
+  </li>
+        <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./references.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">References</span></a>
+  </div>
+</li>
+    </ul>
+    </div>
+</nav>
+<div id="quarto-sidebar-glass" class="quarto-sidebar-collapse-item" data-bs-toggle="collapse" data-bs-target=".quarto-sidebar-collapse-item"></div>
+<!-- margin-sidebar -->
+    <div id="quarto-margin-sidebar" class="sidebar margin-sidebar">
+        <nav id="TOC" role="doc-toc" class="toc-active">
+    <h2 id="toc-title">Table of contents</h2>
+   
+  <ul>
+  <li><a href="#sec-condpta" id="toc-sec-condpta" class="nav-link active" data-scroll-target="#sec-condpta"><span class="header-section-number">3.1</span> Why Conditioning on Covariates Helps</a>
+  <ul class="collapse">
+  <li><a href="#the-failure-of-unconditional-parallel-trends" id="toc-the-failure-of-unconditional-parallel-trends" class="nav-link" data-scroll-target="#the-failure-of-unconditional-parallel-trends"><span class="header-section-number">3.1.1</span> The Failure of Unconditional Parallel Trends</a></li>
+  <li><a href="#the-conditional-parallel-trends-assumption" id="toc-the-conditional-parallel-trends-assumption" class="nav-link" data-scroll-target="#the-conditional-parallel-trends-assumption"><span class="header-section-number">3.1.2</span> The Conditional Parallel Trends Assumption</a></li>
+  <li><a href="#the-overlap-assumption" id="toc-the-overlap-assumption" class="nav-link" data-scroll-target="#the-overlap-assumption"><span class="header-section-number">3.1.3</span> The Overlap Assumption</a></li>
+  <li><a href="#identification-of-the-att-under-cpta" id="toc-identification-of-the-att-under-cpta" class="nav-link" data-scroll-target="#identification-of-the-att-under-cpta"><span class="header-section-number">3.1.4</span> Identification of the ATT under CPTA</a></li>
+  </ul></li>
+  <li><a href="#sec-ipw" id="toc-sec-ipw" class="nav-link" data-scroll-target="#sec-ipw"><span class="header-section-number">3.2</span> Inverse Probability Weighting</a>
+  <ul class="collapse">
+  <li><a href="#the-propensity-score-and-the-balancing-property" id="toc-the-propensity-score-and-the-balancing-property" class="nav-link" data-scroll-target="#the-propensity-score-and-the-balancing-property"><span class="header-section-number">3.2.1</span> The Propensity Score and the Balancing Property</a></li>
+  <li><a href="#sec-abadie" id="toc-sec-abadie" class="nav-link" data-scroll-target="#sec-abadie"><span class="header-section-number">3.2.2</span> The IPW-DiD Estimator (Abadie 2005)</a></li>
+  <li><a href="#stabilised-normalised-weights" id="toc-stabilised-normalised-weights" class="nav-link" data-scroll-target="#stabilised-normalised-weights"><span class="header-section-number">3.2.3</span> Stabilised (Normalised) Weights</a></li>
+  <li><a href="#trimmed-weights" id="toc-trimmed-weights" class="nav-link" data-scroll-target="#trimmed-weights"><span class="header-section-number">3.2.4</span> Trimmed Weights</a></li>
+  <li><a href="#inference-for-ipw-did" id="toc-inference-for-ipw-did" class="nav-link" data-scroll-target="#inference-for-ipw-did"><span class="header-section-number">3.2.5</span> Inference for IPW-DiD</a></li>
+  </ul></li>
+  <li><a href="#sec-drdid" id="toc-sec-drdid" class="nav-link" data-scroll-target="#sec-drdid"><span class="header-section-number">3.3</span> Doubly Robust DiD</a>
+  <ul class="collapse">
+  <li><a href="#motivation-the-cost-of-misspecification" id="toc-motivation-the-cost-of-misspecification" class="nav-link" data-scroll-target="#motivation-the-cost-of-misspecification"><span class="header-section-number">3.3.1</span> Motivation: The Cost of Misspecification</a></li>
+  <li><a href="#the-dr-did-estimand" id="toc-the-dr-did-estimand" class="nav-link" data-scroll-target="#the-dr-did-estimand"><span class="header-section-number">3.3.2</span> The DR-DiD Estimand</a></li>
+  <li><a href="#double-robustness-formal-proof" id="toc-double-robustness-formal-proof" class="nav-link" data-scroll-target="#double-robustness-formal-proof"><span class="header-section-number">3.3.3</span> Double Robustness: Formal Proof</a></li>
+  <li><a href="#the-sample-dr-did-estimator" id="toc-the-sample-dr-did-estimator" class="nav-link" data-scroll-target="#the-sample-dr-did-estimator"><span class="header-section-number">3.3.4</span> The Sample DR-DiD Estimator</a></li>
+  <li><a href="#efficiency-and-the-semiparametric-efficiency-bound" id="toc-efficiency-and-the-semiparametric-efficiency-bound" class="nav-link" data-scroll-target="#efficiency-and-the-semiparametric-efficiency-bound"><span class="header-section-number">3.3.5</span> Efficiency and the Semiparametric Efficiency Bound</a></li>
+  <li><a href="#inference" id="toc-inference" class="nav-link" data-scroll-target="#inference"><span class="header-section-number">3.3.6</span> Inference</a></li>
+  </ul></li>
+  <li><a href="#sec-ipwdr-empirics" id="toc-sec-ipwdr-empirics" class="nav-link" data-scroll-target="#sec-ipwdr-empirics"><span class="header-section-number">3.4</span> Empirical Illustration in R</a>
+  <ul class="collapse">
+  <li><a href="#data-generating-process" id="toc-data-generating-process" class="nav-link" data-scroll-target="#data-generating-process">Data Generating Process</a></li>
+  <li><a href="#covariate-imbalance-and-unconditional-pta-failure" id="toc-covariate-imbalance-and-unconditional-pta-failure" class="nav-link" data-scroll-target="#covariate-imbalance-and-unconditional-pta-failure">Covariate Imbalance and Unconditional PTA Failure</a></li>
+  <li><a href="#propensity-score-estimation-and-overlap-check" id="toc-propensity-score-estimation-and-overlap-check" class="nav-link" data-scroll-target="#propensity-score-estimation-and-overlap-check">Propensity Score Estimation and Overlap Check</a></li>
+  <li><a href="#estimating-the-att" id="toc-estimating-the-att" class="nav-link" data-scroll-target="#estimating-the-att">Estimating the ATT</a></li>
+  <li><a href="#sensitivity-misspecifying-one-model" id="toc-sensitivity-misspecifying-one-model" class="nav-link" data-scroll-target="#sensitivity-misspecifying-one-model">Sensitivity: Misspecifying One Model</a></li>
+  </ul></li>
+  <li><a href="#sec-ch3-summary" id="toc-sec-ch3-summary" class="nav-link" data-scroll-target="#sec-ch3-summary"><span class="header-section-number">3.5</span> Summary</a></li>
+  </ul>
+</nav>
+    </div>
+<!-- main -->
+<main class="content" id="quarto-document-content">
+
+<header id="title-block-header" class="quarto-title-block default"><nav class="quarto-page-breadcrumbs quarto-title-breadcrumbs d-none d-lg-block" aria-label="breadcrumb"><ol class="breadcrumb"><li class="breadcrumb-item"><a href="./chapter2.html">Part II — Identification Assumptions</a></li><li class="breadcrumb-item"><a href="./chapter3.html"><span class="chapter-number">3</span>&nbsp; <span class="chapter-title">Covariate Adjustment: IPW and Doubly Robust DiD</span></a></li></ol></nav>
+<div class="quarto-title">
+<h1 class="title"><span id="sec-ipwdr" class="quarto-section-identifier"><span class="chapter-number">3</span>&nbsp; <span class="chapter-title">Covariate Adjustment: IPW and Doubly Robust DiD</span></span></h1>
+</div>
+
+
+
+<div class="quarto-title-meta">
+
+    
+  
+    
+  </div>
+  
+
+
+</header>
+
+
+<p><a href="intro.html" class="quarto-xref"><span>Chapter 1</span></a> established the parallel trends assumption (PTA) as the core identifying restriction of DiD. <a href="chapter2.html" class="quarto-xref"><span>Chapter 2</span></a> demonstrated that this assumption is often difficult to defend unconditionally: when treated and control groups differ systematically on pre-treatment characteristics that predict differential outcome trajectories, the marginal PTA fails even if no treatment effect exists. The remedy is to condition on those characteristics — replacing the unconditional PTA with a <strong>conditional</strong> variant that asserts parallelism only within strata defined by observed covariates <span class="math inline">\(\mathbf{X}_i\)</span>.</p>
+<p>This chapter develops two estimators that exploit conditional PTA. Section <a href="#sec-condpta" class="quarto-xref"><span>Section 3.1</span></a> establishes why conditioning on covariates restores identification and states the formal assumptions precisely. Section <a href="#sec-ipw" class="quarto-xref"><span>Section 3.2</span></a> introduces inverse probability weighting (IPW) and derives its DiD analogue, including stabilised and trimmed variants. Section <a href="#sec-drdid" class="quarto-xref"><span>Section 3.3</span></a> presents the doubly robust DiD (DR-DiD) estimator of <span class="citation" data-cites="santanna2020">Sant’Anna &amp; Zhao (<a href="references.html#ref-santanna2020" role="doc-biblioref">2020</a>)</span> and proves the double-robustness property. Section <a href="#sec-ipwdr-empirics" class="quarto-xref"><span>Section 3.4</span></a> illustrates all three estimators on a simulated dataset in R.</p>
+<hr>
+<section id="sec-condpta" class="level2" data-number="3.1">
+<h2 data-number="3.1" class="anchored" data-anchor-id="sec-condpta"><span class="header-section-number">3.1</span> Why Conditioning on Covariates Helps</h2>
+<section id="the-failure-of-unconditional-parallel-trends" class="level3" data-number="3.1.1">
+<h3 data-number="3.1.1" class="anchored" data-anchor-id="the-failure-of-unconditional-parallel-trends"><span class="header-section-number">3.1.1</span> The Failure of Unconditional Parallel Trends</h3>
+<p>Recall the unconditional PTA from equation (1.13):</p>
+<p><span class="math display">\[\mathbb{E}\!\left[Y_{i,1}(0)-Y_{i,0}(0)\mid D_i=1\right]
+=\mathbb{E}\!\left[Y_{i,1}(0)-Y_{i,0}(0)\mid D_i=0\right]. \tag{3.1}\]</span></p>
+<p>Equation (3.1) requires that, in the absence of treatment, the <em>average counterfactual trend</em> of the treated group equals that of the control group. This is a marginal restriction on unobservables. Its plausibility depends critically on how similar the two groups are in their pre-treatment composition.</p>
+<p>To see the problem formally, let <span class="math inline">\(\mathbf{X}_i\)</span> be a vector of pre-treatment covariates. By the law of iterated expectations:</p>
+<p><span class="math display">\[\mathbb{E}\!\left[Y_{i,1}(0)-Y_{i,0}(0)\mid D_i=d\right]
+= \mathbb{E}_{\mathbf{X}\mid D=d}\!\left[
+\mathbb{E}\!\left[Y_{i,1}(0)-Y_{i,0}(0)\mid D_i=d,\,\mathbf{X}_i\right]
+\right]. \tag{3.2}\]</span></p>
+<p>Even if <span class="math inline">\(\mathbb{E}[Y_{i,1}(0)-Y_{i,0}(0)\mid D_i=1,\mathbf{X}_i]
+= \mathbb{E}[Y_{i,1}(0)-Y_{i,0}(0)\mid D_i=0,\mathbf{X}_i]\)</span> for every value of <span class="math inline">\(\mathbf{X}_i\)</span> — that is, even if conditional PTA holds — the <em>marginal</em> trends in (3.1) will differ whenever the covariate distributions <span class="math inline">\(F(\mathbf{X}\mid D=1)\)</span> and <span class="math inline">\(F(\mathbf{X}\mid D=0)\)</span> differ and the outcome trend varies with <span class="math inline">\(\mathbf{X}_i\)</span>. The marginal trends are weighted averages of the same conditional trend function, but the weights differ across groups, so the aggregates can diverge.</p>
+<div class="callout callout-style-default callout-note callout-titled">
+<div class="callout-header d-flex align-content-center">
+<div class="callout-icon-container">
+<i class="callout-icon"></i>
+</div>
+<div class="callout-title-container flex-fill">
+Note
+</div>
+</div>
+<div class="callout-body-container callout-body">
+<p><strong>Example (Differential composition).</strong> Suppose the post–pre change in untreated potential outcomes is <span class="math inline">\(Y_{i,1}(0)-Y_{i,0}(0) = \alpha + \gamma X_i + \varepsilon_i\)</span>, where <span class="math inline">\(X_i \in \{0,1\}\)</span> is a binary covariate and <span class="math inline">\(\mathbb{E}[\varepsilon_i \mid D_i, X_i] = 0\)</span>. The conditional trend is the same for both groups: <span class="math inline">\(\alpha + \gamma x\)</span>. But if <span class="math inline">\(\Pr(X_i = 1 \mid D_i = 1) = 0.8\)</span> and <span class="math inline">\(\Pr(X_i = 1 \mid D_i = 0) = 0.2\)</span>, the marginal trends are</p>
+<p><span class="math display">\[\mathbb{E}[Y_{i,1}(0)-Y_{i,0}(0)\mid D_i=1] = \alpha + 0.8\gamma, \qquad
+\mathbb{E}[Y_{i,1}(0)-Y_{i,0}(0)\mid D_i=0] = \alpha + 0.2\gamma.\]</span></p>
+<p>These differ by <span class="math inline">\(0.6\gamma \neq 0\)</span> whenever <span class="math inline">\(\gamma \neq 0\)</span>, even though the conditional PTA holds exactly. The DiD estimator without covariate adjustment absorbs this composition difference as a spurious treatment effect.</p>
+</div>
+</div>
+</section>
+<section id="the-conditional-parallel-trends-assumption" class="level3" data-number="3.1.2">
+<h3 data-number="3.1.2" class="anchored" data-anchor-id="the-conditional-parallel-trends-assumption"><span class="header-section-number">3.1.2</span> The Conditional Parallel Trends Assumption</h3>
+<p><span class="citation" data-cites="abadie2005">Abadie (<a href="references.html#ref-abadie2005" role="doc-biblioref">2005</a>)</span> formalises the conditional analogue. Let <span class="math inline">\(\mathbf{X}_i\)</span> denote a vector of <strong>pre-treatment</strong> covariates observed for all units. The <strong>conditional parallel trends assumption</strong> (CPTA) states:</p>
+<p><span class="math display">\[\mathbb{E}\!\left[Y_{i,1}(0)-Y_{i,0}(0)\mid D_i=1,\mathbf{X}_i\right]
+=\mathbb{E}\!\left[Y_{i,1}(0)-Y_{i,0}(0)\mid D_i=0,\mathbf{X}_i\right]
+\quad \text{a.s.} \tag{3.3}\]</span></p>
+<p>Assumption (3.3) is strictly <em>weaker</em> than (3.1): it conditions out compositional heterogeneity and requires only that, within each stratum defined by <span class="math inline">\(\mathbf{X}_i = \mathbf{x}\)</span>, the two groups would have trended identically in the absence of treatment. The assumption does not require equal pre-treatment levels; it restricts only the <em>change</em> in counterfactual outcomes conditional on covariates. Substantively, (3.3) is credible when <span class="math inline">\(\mathbf{X}_i\)</span> captures the key determinants of differential time trends — for instance, sector of employment, age group, baseline income decile, or region — so that, within each covariate cell, selection into treatment carries no additional predictive content for the counterfactual trajectory.</p>
+<p>It is also worth noting the relationship to the cross-sectional unconfoundedness assumption used in matching and propensity-score methods. <span class="citation" data-cites="heckman1997">Heckman et al. (<a href="references.html#ref-heckman1997" role="doc-biblioref">1997</a>)</span> showed that, in an evaluation setting with repeated observations, the relevant “selection-on-observables” condition pertains to changes rather than levels: one must condition on <span class="math inline">\(\mathbf{X}_i\)</span> to make changes comparable, not merely to make levels comparable. Equation (3.3) is precisely this change-based analogue of unconfoundedness.</p>
+</section>
+<section id="the-overlap-assumption" class="level3" data-number="3.1.3">
+<h3 data-number="3.1.3" class="anchored" data-anchor-id="the-overlap-assumption"><span class="header-section-number">3.1.3</span> The Overlap Assumption</h3>
+<p>For the conditional PTA to deliver point identification, every value of <span class="math inline">\(\mathbf{X}_i\)</span> that occurs in the treated population must also occur in the control population. The <strong>overlap</strong> (or common support) assumption formalises this:</p>
+<p><span class="math display">\[0 &lt; p(\mathbf{X}_i) &lt; 1 \quad \text{a.s.,} \tag{3.4}\]</span></p>
+<p>where <span class="math inline">\(p(\mathbf{x}) \equiv \Pr(D_i = 1 \mid \mathbf{X}_i = \mathbf{x})\)</span> is the <strong>propensity score</strong> — the probability of treatment given covariates, introduced by <span class="citation" data-cites="rosenbaum1983">Rosenbaum &amp; Rubin (<a href="references.html#ref-rosenbaum1983" role="doc-biblioref">1983</a>)</span>. The lower bound <span class="math inline">\(p(\mathbf{X}_i) &gt; 0\)</span> ensures that control units with the same covariate values as the treated exist and can contribute to trend estimation. The upper bound <span class="math inline">\(p(\mathbf{X}_i) &lt; 1\)</span> ensures that treated units are not deterministically selected by their observables, so the control trend is informative about their counterfactual. In practice, overlap is checked by inspecting the empirical distribution of <span class="math inline">\(\hat p(\mathbf{X}_i)\)</span> separately for treated and control units; extreme values near 0 or 1 signal regions of the covariate space where the two groups barely overlap and where IPW-based estimators become unstable.</p>
+</section>
+<section id="identification-of-the-att-under-cpta" class="level3" data-number="3.1.4">
+<h3 data-number="3.1.4" class="anchored" data-anchor-id="identification-of-the-att-under-cpta"><span class="header-section-number">3.1.4</span> Identification of the ATT under CPTA</h3>
+<div class="callout callout-style-default callout-note callout-titled">
+<div class="callout-header d-flex align-content-center">
+<div class="callout-icon-container">
+<i class="callout-icon"></i>
+</div>
+<div class="callout-title-container flex-fill">
+Note
+</div>
+</div>
+<div class="callout-body-container callout-body">
+<p><strong>Proposition 3.1 (ATT Identification under CPTA).</strong> <em>Suppose the CPTA</em> (3.3), <em>overlap</em> (3.4), <em>no-anticipation</em> (1.14), <em>and SUTVA hold. Then the ATT is identified by</em></p>
+<p><span class="math display">\[\text{ATT}
+= \mathbb{E}\!\left[\Delta Y_i \mid D_i = 1\right]
+- \mathbb{E}\!\left[\mu_{0,\Delta}(\mathbf{X}_i) \mid D_i = 1\right], \tag{3.5}\]</span></p>
+<p><em>where</em> <span class="math inline">\(\Delta Y_i = Y_{i,1} - Y_{i,0}\)</span> and <span class="math inline">\(\mu_{0,\Delta}(\mathbf{x}) \equiv \mathbb{E}[\Delta Y_i \mid D_i = 0, \mathbf{X}_i = \mathbf{x}]\)</span> is the conditional mean change for the control group.</p>
+</div>
+</div>
+<p><em>Proof.</em> By no-anticipation, <span class="math inline">\(Y_{i,0}^{\text{obs}} = Y_{i,0}(0)\)</span> for treated units, so <span class="math inline">\(\Delta Y_i = Y_{i,1}(1) - Y_{i,0}(0)\)</span> for <span class="math inline">\(D_i = 1\)</span>. Write:</p>
+<p><span class="math display">\[\mathbb{E}[\Delta Y_i \mid D_i=1]
+= \mathbb{E}[Y_{i,1}(1) - Y_{i,0}(0)\mid D_i=1].\]</span></p>
+<p>Add and subtract <span class="math inline">\(\mathbb{E}[Y_{i,1}(0)\mid D_i=1]\)</span>:</p>
+<p><span class="math display">\[= \underbrace{\mathbb{E}[Y_{i,1}(1)-Y_{i,1}(0)\mid D_i=1]}_{\text{ATT}}
++ \mathbb{E}[Y_{i,1}(0)-Y_{i,0}(0)\mid D_i=1].\]</span></p>
+<p>By CPTA (3.3):</p>
+<p><span class="math display">\[\mathbb{E}[Y_{i,1}(0)-Y_{i,0}(0)\mid D_i=1]
+= \mathbb{E}\!\left[\mathbb{E}[Y_{i,1}(0)-Y_{i,0}(0)\mid D_i=1,\mathbf{X}_i]\mid D_i=1\right]\]</span></p>
+<p><span class="math display">\[= \mathbb{E}\!\left[\mathbb{E}[\Delta Y_i \mid D_i=0, \mathbf{X}_i]\mid D_i=1\right]
+= \mathbb{E}[\mu_{0,\Delta}(\mathbf{X}_i)\mid D_i=1].\]</span></p>
+<p>Rearranging:</p>
+<p><span class="math display">\[\text{ATT} = \mathbb{E}[\Delta Y_i\mid D_i=1]
+- \mathbb{E}[\mu_{0,\Delta}(\mathbf{X}_i)\mid D_i=1]. \qquad\square \tag{3.6}\]</span></p>
+<p>Equation (3.6) has a clean interpretation: the ATT is the treated group’s observed average change minus the counterfactual change that the treated group would have experienced, the latter inferred from the control group’s outcome regression evaluated at the treated group’s covariate values. The difficulty is that <span class="math inline">\(\mu_{0,\Delta}(\mathbf{x})\)</span> must be estimated non-parametrically or modelled, and the expectation is taken over the treated group’s covariate distribution — which requires either outcome regression or reweighting. Both routes lead to the estimators in Sections <a href="#sec-ipw" class="quarto-xref"><span>Section 3.2</span></a> and <a href="#sec-drdid" class="quarto-xref"><span>Section 3.3</span></a>.</p>
+<hr>
+</section>
+</section>
+<section id="sec-ipw" class="level2" data-number="3.2">
+<h2 data-number="3.2" class="anchored" data-anchor-id="sec-ipw"><span class="header-section-number">3.2</span> Inverse Probability Weighting</h2>
+<section id="the-propensity-score-and-the-balancing-property" class="level3" data-number="3.2.1">
+<h3 data-number="3.2.1" class="anchored" data-anchor-id="the-propensity-score-and-the-balancing-property"><span class="header-section-number">3.2.1</span> The Propensity Score and the Balancing Property</h3>
+<p><span class="citation" data-cites="rosenbaum1983">Rosenbaum &amp; Rubin (<a href="references.html#ref-rosenbaum1983" role="doc-biblioref">1983</a>)</span> showed that the propensity score <span class="math inline">\(p(\mathbf{x}) = \Pr(D_i = 1 \mid \mathbf{X}_i = \mathbf{x})\)</span> possesses a fundamental balancing property: conditional on the propensity score, treatment assignment is independent of the full covariate vector,</p>
+<p><span class="math display">\[D_i \perp\!\!\!\perp \mathbf{X}_i \;\big|\; p(\mathbf{X}_i). \tag{3.7}\]</span></p>
+<p>Property (3.7) reduces the dimensionality problem: instead of conditioning on the full vector <span class="math inline">\(\mathbf{X}_i\)</span>, it suffices to condition on the scalar <span class="math inline">\(p(\mathbf{X}_i)\)</span>. In the cross-sectional setting, <span class="citation" data-cites="hirano2003">Hirano et al. (<a href="references.html#ref-hirano2003" role="doc-biblioref">2003</a>)</span> showed that weighting by the inverse of the propensity score recovers the ATE and ATT efficiently. In the DiD setting, <span class="citation" data-cites="abadie2005">Abadie (<a href="references.html#ref-abadie2005" role="doc-biblioref">2005</a>)</span> extended this insight by noting that the propensity score simultaneously balances the covariate distribution and, through CPTA, equates the counterfactual trend across groups.</p>
+<p><strong>Reweighting the control group.</strong> The key identity underlying IPW-DiD is that, under CPTA and overlap:</p>
+<p><span class="math display">\[\mathbb{E}[\mu_{0,\Delta}(\mathbf{X}_i) \mid D_i=1]
+= \frac{\mathbb{E}\!\left[\dfrac{p(\mathbf{X}_i)}{1-p(\mathbf{X}_i)}\Delta Y_i \,\bigg|\, D_i=0\right]}
+       {\mathbb{E}\!\left[\dfrac{p(\mathbf{X}_i)}{1-p(\mathbf{X}_i)}\,\bigg|\, D_i=0\right]}. \tag{3.8}\]</span></p>
+<p><em>Proof of</em> (3.8). By the law of iterated expectations and the definition of <span class="math inline">\(\mu_{0,\Delta}\)</span>:</p>
+<p><span class="math display">\[\mathbb{E}[\mu_{0,\Delta}(\mathbf{X}_i)\mid D_i=1]
+= \frac{\mathbb{E}[\mu_{0,\Delta}(\mathbf{X}_i)\,p(\mathbf{X}_i)]}{\Pr(D_i=1)}.\]</span></p>
+<p>For the numerator, write <span class="math inline">\(\mathbb{E}[\mu_{0,\Delta}(\mathbf{X}_i)\,p(\mathbf{X}_i)]\)</span>. Condition on <span class="math inline">\(\mathbf{X}_i\)</span> and apply the CPTA and the control group’s regression:</p>
+<p><span class="math display">\[= \mathbb{E}\!\left[\mathbb{E}[\Delta Y_i\mid D_i=0,\mathbf{X}_i]\cdot p(\mathbf{X}_i)\right]
+= \mathbb{E}\!\left[\frac{p(\mathbf{X}_i)}{1-p(\mathbf{X}_i)}(1-p(\mathbf{X}_i))\mathbb{E}[\Delta Y_i\mid D_i=0,\mathbf{X}_i]\right].\]</span></p>
+<p>Applying iterated expectations again:</p>
+<p><span class="math display">\[= \mathbb{E}\!\left[\frac{p(\mathbf{X}_i)}{1-p(\mathbf{X}_i)}\Delta Y_i(1-D_i)\right]
+= \Pr(D_i=0)\,\mathbb{E}\!\left[\frac{p(\mathbf{X}_i)}{1-p(\mathbf{X}_i)}\Delta Y_i\,\bigg|\, D_i=0\right].\]</span></p>
+<p>Dividing by <span class="math inline">\(\Pr(D_i=1)\)</span> and noting that <span class="math inline">\(\mathbb{E}[p(\mathbf{X}_i)/(1-p(\mathbf{X}_i))\mid D_i=0]
+= \Pr(D_i=1)/\Pr(D_i=0)\)</span>, equation (3.8) follows. <span class="math inline">\(\square\)</span></p>
+<p>Substituting (3.8) into (3.6) gives the population IPW-DiD estimand.</p>
+</section>
+<section id="sec-abadie" class="level3" data-number="3.2.2">
+<h3 data-number="3.2.2" class="anchored" data-anchor-id="sec-abadie"><span class="header-section-number">3.2.2</span> The IPW-DiD Estimator (Abadie 2005)</h3>
+<p><span class="citation" data-cites="abadie2005">Abadie (<a href="references.html#ref-abadie2005" role="doc-biblioref">2005</a>)</span> derives the following representation of the ATT. Let <span class="math inline">\(\pi \equiv \Pr(D_i = 1)\)</span>. Under CPTA, overlap, no-anticipation, and SUTVA:</p>
+<p><span class="math display">\[\text{ATT} = \frac{1}{\pi}\,
+\mathbb{E}\!\left[
+\left(D_i - \frac{(1-D_i)\,p(\mathbf{X}_i)}{1-p(\mathbf{X}_i)}\right)\Delta Y_i
+\right]. \tag{3.9}\]</span></p>
+<p>Define the <strong>IPW weight function</strong>:</p>
+<p><span class="math display">\[w_i^{\text{ipw}} \equiv
+\frac{D_i}{\pi}
+- \frac{(1-D_i)\,p(\mathbf{X}_i)}{\pi\,(1-p(\mathbf{X}_i))}. \tag{3.10}\]</span></p>
+<p>Equation (3.9) can then be written compactly as <span class="math inline">\(\text{ATT} = \mathbb{E}[w_i^{\text{ipw}}\,\Delta Y_i]\)</span>. Treated units receive positive weight <span class="math inline">\(1/\pi\)</span>; control units receive a <em>negative</em> pseudo-weight <span class="math inline">\(-p(\mathbf{X}_i)/[\pi(1-p(\mathbf{X}_i))]\)</span> proportional to the odds of treatment. The latter transfers weight from control units whose propensity score is low (few treated units in that covariate cell) to those whose score is high (many treated units), thereby constructing a covariate-balanced comparison group.</p>
+<p><strong>Sample analogue (Horvitz–Thompson form).</strong> Replacing <span class="math inline">\(\pi\)</span> with its sample analogue <span class="math inline">\(\hat\pi = n^{-1}\sum_i D_i\)</span> and <span class="math inline">\(p(\mathbf{X}_i)\)</span> with an estimated propensity score <span class="math inline">\(\hat p(\mathbf{X}_i)\)</span>:</p>
+<p><span class="math display">\[\widehat{\text{ATT}}_{\text{HT}}
+= \frac{1}{n}\sum_{i=1}^n
+\left[\frac{D_i\,\Delta Y_i}{\hat\pi}
+- \frac{(1-D_i)\,\hat p(\mathbf{X}_i)\,\Delta Y_i}
+      {\hat\pi\,\bigl(1-\hat p(\mathbf{X}_i)\bigr)}\right]. \tag{3.11}\]</span></p>
+<p>The Horvitz–Thompson estimator (3.11) is consistent when <span class="math inline">\(\hat p(\mathbf{X}_i)\)</span> is consistent, but it can be numerically unstable when propensity scores are near 0 or 1, because the control weights <span class="math inline">\(\hat p/(1-\hat p)\)</span> may be very large.</p>
+</section>
+<section id="stabilised-normalised-weights" class="level3" data-number="3.2.3">
+<h3 data-number="3.2.3" class="anchored" data-anchor-id="stabilised-normalised-weights"><span class="header-section-number">3.2.3</span> Stabilised (Normalised) Weights</h3>
+<p><span class="citation" data-cites="hirano2003">Hirano et al. (<a href="references.html#ref-hirano2003" role="doc-biblioref">2003</a>)</span> and <span class="citation" data-cites="heckman1998">Heckman et al. (<a href="references.html#ref-heckman1998" role="doc-biblioref">1998</a>)</span> advocate <strong>normalised</strong> (Hájek-type) estimators that separately rescale the treated and control contributions so that each set of weights sums to one. For the ATT:</p>
+<p><span class="math display">\[\widehat{\text{ATT}}_{\text{stab}}
+= \frac{\displaystyle\sum_{D_i=1}\Delta Y_i}{\displaystyle\sum_{D_i=1} 1}
+- \frac{\displaystyle\sum_{D_i=0}
+  \dfrac{\hat p(\mathbf{X}_i)}{1-\hat p(\mathbf{X}_i)}\Delta Y_i}
+{\displaystyle\sum_{D_i=0}\dfrac{\hat p(\mathbf{X}_i)}{1-\hat p(\mathbf{X}_i)}}. \tag{3.12}\]</span></p>
+<p>In (3.12), the first term is simply the treated sample mean of <span class="math inline">\(\Delta Y_i\)</span>. The second term is a <strong>weighted mean</strong> of control group outcome changes, where the weight for control unit <span class="math inline">\(i\)</span> is:</p>
+<p><span class="math display">\[\tilde w_i^{\text{stab}}
+= \frac{\hat p(\mathbf{X}_i)/(1-\hat p(\mathbf{X}_i))}
+       {\sum_{j:\,D_j=0}\hat p(\mathbf{X}_j)/(1-\hat p(\mathbf{X}_j))}. \tag{3.13}\]</span></p>
+<p>These stabilised weights <span class="math inline">\(\tilde w_i^{\text{stab}}\)</span> are non-negative and sum to one within the control group, so <span class="math inline">\(\widehat{\text{ATT}}_{\text{stab}}\)</span> is a simple difference of two weighted sample means. Stabilisation reduces variance relative to (3.11) by removing the estimation noise in <span class="math inline">\(\hat\pi\)</span> from the denominator and by anchoring the scale of the control weights. In finite samples, <span class="math inline">\(\widehat{\text{ATT}}_{\text{stab}}\)</span> is generally preferred to <span class="math inline">\(\widehat{\text{ATT}}_{\text{HT}}\)</span> <span class="citation" data-cites="hirano2003 santanna2020">(<a href="references.html#ref-hirano2003" role="doc-biblioref">Hirano et al., 2003</a>; <a href="references.html#ref-santanna2020" role="doc-biblioref">Sant’Anna &amp; Zhao, 2020</a>)</span>.</p>
+</section>
+<section id="trimmed-weights" class="level3" data-number="3.2.4">
+<h3 data-number="3.2.4" class="anchored" data-anchor-id="trimmed-weights"><span class="header-section-number">3.2.4</span> Trimmed Weights</h3>
+<p>Even with normalisation, control units with <span class="math inline">\(\hat p(\mathbf{X}_i)\)</span> near 1 — implying near-zero probability of being a control — receive very large odds-ratio weights and exert disproportionate influence on the estimate. <span class="citation" data-cites="crump2009">Crump et al. (<a href="references.html#ref-crump2009" role="doc-biblioref">2009</a>)</span> show that trimming units with extreme propensity scores reduces mean squared error at the cost of targeting a slightly different estimand (the ATT over the trimmed support). The standard trimming rule is:</p>
+<p><span class="math display">\[\mathcal{S}_\tau
+= \{i : \tau \leq \hat p(\mathbf{X}_i) \leq 1-\tau\}, \tag{3.14}\]</span></p>
+<p>for a threshold <span class="math inline">\(\tau \in (0, 0.5)\)</span>, typically <span class="math inline">\(\tau = 0.1\)</span>. The trimmed estimator restricts (3.12) to units in <span class="math inline">\(\mathcal{S}_\tau\)</span>:</p>
+<p><span class="math display">\[\widehat{\text{ATT}}_{\text{trim}}
+= \frac{\sum_{i\in\mathcal{S}_\tau,D_i=1}\Delta Y_i}
+       {\sum_{i\in\mathcal{S}_\tau,D_i=1}1}
+- \frac{\sum_{i\in\mathcal{S}_\tau,D_i=0}
+  \frac{\hat p(\mathbf{X}_i)}{1-\hat p(\mathbf{X}_i)}\Delta Y_i}
+{\sum_{i\in\mathcal{S}_\tau,D_i=0}
+  \frac{\hat p(\mathbf{X}_i)}{1-\hat p(\mathbf{X}_i)}}. \tag{3.15}\]</span></p>
+<p>Trimming effectively restricts inference to the region of common support, making the comparison more credible at the expense of external validity: the ATT in (3.15) pertains only to treated units with <span class="math inline">\(\hat p(\mathbf{X}_i) \geq \tau\)</span>. Applied work should report the share of units trimmed and check sensitivity of the estimate to <span class="math inline">\(\tau\)</span>.</p>
+</section>
+<section id="inference-for-ipw-did" class="level3" data-number="3.2.5">
+<h3 data-number="3.2.5" class="anchored" data-anchor-id="inference-for-ipw-did"><span class="header-section-number">3.2.5</span> Inference for IPW-DiD</h3>
+<p>Standard errors for (3.11) and (3.12) must account for the estimation of <span class="math inline">\(\hat p(\mathbf{X}_i)\)</span>. <span class="citation" data-cites="abadie2005">Abadie (<a href="references.html#ref-abadie2005" role="doc-biblioref">2005</a>)</span> derives the asymptotic distribution of (3.11) when the propensity score is estimated by logistic regression. In practice, the bootstrap is the most reliable and general-purpose approach: resample the data with replacement <span class="math inline">\(B\)</span> times, re-estimate <span class="math inline">\(\hat p\)</span> and <span class="math inline">\(\widehat{\text{ATT}}\)</span> in each bootstrap sample, and use the resulting empirical distribution to construct confidence intervals. The <code>DRDID</code> package of <span class="citation" data-cites="santanna2020">Sant’Anna &amp; Zhao (<a href="references.html#ref-santanna2020" role="doc-biblioref">2020</a>)</span> implements both analytical and bootstrap standard errors for all estimators discussed in this chapter.</p>
+<hr>
+</section>
+</section>
+<section id="sec-drdid" class="level2" data-number="3.3">
+<h2 data-number="3.3" class="anchored" data-anchor-id="sec-drdid"><span class="header-section-number">3.3</span> Doubly Robust DiD</h2>
+<section id="motivation-the-cost-of-misspecification" class="level3" data-number="3.3.1">
+<h3 data-number="3.3.1" class="anchored" data-anchor-id="motivation-the-cost-of-misspecification"><span class="header-section-number">3.3.1</span> Motivation: The Cost of Misspecification</h3>
+<p>Both the IPW estimator (3.12) and the pure outcome-regression estimator (which plugs <span class="math inline">\(\hat\mu_{0,\Delta}(\mathbf{X}_i)\)</span> into (3.6) directly) are consistent only if their respective working model — the propensity score or the outcome regression — is correctly specified. In practice, both models are approximations. An estimator that remains consistent if <em>at least one</em> of the two models is correctly specified — regardless of which — is said to be <strong>doubly robust</strong> (DR). DR estimators were introduced in the cross-sectional causal inference literature by <span class="citation" data-cites="robins1994">Robins et al. (<a href="references.html#ref-robins1994" role="doc-biblioref">1994</a>)</span> and <span class="citation" data-cites="robins1995">Robins &amp; Rotnitzky (<a href="references.html#ref-robins1995" role="doc-biblioref">1995</a>)</span>, and extended to the DiD setting by <span class="citation" data-cites="santanna2020">Sant’Anna &amp; Zhao (<a href="references.html#ref-santanna2020" role="doc-biblioref">2020</a>)</span>.</p>
+</section>
+<section id="the-dr-did-estimand" class="level3" data-number="3.3.2">
+<h3 data-number="3.3.2" class="anchored" data-anchor-id="the-dr-did-estimand"><span class="header-section-number">3.3.2</span> The DR-DiD Estimand</h3>
+<p><span class="citation" data-cites="santanna2020">Sant’Anna &amp; Zhao (<a href="references.html#ref-santanna2020" role="doc-biblioref">2020</a>)</span> propose the following ATT estimand under CPTA and overlap:</p>
+<p><span class="math display">\[\text{ATT}_{\text{DR}}
+= \mathbb{E}\!\left[
+\frac{D_i - p(\mathbf{X}_i)}{\Pr(D_i=1)\,(1-p(\mathbf{X}_i))}
+\Bigl(\Delta Y_i - \mu_{0,\Delta}(\mathbf{X}_i)\Bigr)
+\right], \tag{3.16}\]</span></p>
+<p>where <span class="math inline">\(\mu_{0,\Delta}(\mathbf{x}) = \mathbb{E}[\Delta Y_i \mid D_i=0, \mathbf{X}_i = \mathbf{x}]\)</span> is the counterfactual trend regression. Expanding (3.16) clarifies the structure:</p>
+<p><span class="math display">\[\text{ATT}_{\text{DR}}
+= \underbrace{\mathbb{E}\!\left[\frac{D_i - p(\mathbf{X}_i)}{\pi(1-p(\mathbf{X}_i))}\Delta Y_i\right]}_{\text{IPW term}}
+- \underbrace{\mathbb{E}\!\left[\frac{D_i - p(\mathbf{X}_i)}{\pi(1-p(\mathbf{X}_i))}\mu_{0,\Delta}(\mathbf{X}_i)\right]}_{\text{bias-correction term}}. \tag{3.17}\]</span></p>
+<p>The first component is the IPW-DiD estimand (3.9). The second component subtracts a propensity-score–weighted average of the outcome regression, acting as a bias correction that removes the residual imbalance left by an imperfect propensity-score model.</p>
+</section>
+<section id="double-robustness-formal-proof" class="level3" data-number="3.3.3">
+<h3 data-number="3.3.3" class="anchored" data-anchor-id="double-robustness-formal-proof"><span class="header-section-number">3.3.3</span> Double Robustness: Formal Proof</h3>
+<div class="callout callout-style-default callout-note callout-titled">
+<div class="callout-header d-flex align-content-center">
+<div class="callout-icon-container">
+<i class="callout-icon"></i>
+</div>
+<div class="callout-title-container flex-fill">
+Note
+</div>
+</div>
+<div class="callout-body-container callout-body">
+<p><strong>Proposition 3.2 (Double Robustness).</strong> <em>Let</em> <span class="math inline">\(\tilde p(\mathbf{x})\)</span> be a possibly misspecified propensity-score model and <span class="math inline">\(\tilde\mu_{0,\Delta}(\mathbf{x})\)</span> a possibly misspecified outcome-regression model. The estimand <span class="math inline">\(\widehat{\text{ATT}}_{\text{DR}}\)</span> evaluated at <span class="math inline">\((\tilde p, \tilde\mu_{0,\Delta})\)</span> is consistent for the ATT if either</p>
+<p><em>(a)</em> <span class="math inline">\(\tilde p(\mathbf{x}) = p(\mathbf{x})\)</span> almost surely (correct PS, possibly wrong OR), or</p>
+<p><em>(b)</em> <span class="math inline">\(\tilde\mu_{0,\Delta}(\mathbf{x}) = \mu_{0,\Delta}(\mathbf{x})\)</span> almost surely (correct OR, possibly wrong PS).</p>
+</div>
+</div>
+<p><em>Proof of (a): PS correct, OR misspecified.</em> Denote the DR estimand with <span class="math inline">\((\tilde p, \tilde\mu_{0,\Delta})\)</span> as</p>
+<p><span class="math display">\[\Gamma(\tilde p, \tilde\mu_{0,\Delta})
+= \mathbb{E}\!\left[\frac{D_i - \tilde p(\mathbf{X}_i)}{\pi(1-\tilde p(\mathbf{X}_i))}\Delta Y_i\right]
+- \mathbb{E}\!\left[\frac{D_i - \tilde p(\mathbf{X}_i)}{\pi(1-\tilde p(\mathbf{X}_i))}\tilde\mu_{0,\Delta}(\mathbf{X}_i)\right].\]</span></p>
+<p>For the bias-correction term, condition on <span class="math inline">\(\mathbf{X}_i\)</span>:</p>
+<p><span class="math display">\[\mathbb{E}\!\left[\frac{D_i - \tilde p(\mathbf{X}_i)}{\pi(1-\tilde p(\mathbf{X}_i))}\tilde\mu_{0,\Delta}(\mathbf{X}_i)\right]
+= \mathbb{E}\!\left[\frac{\tilde\mu_{0,\Delta}(\mathbf{X}_i)}{\pi(1-\tilde p(\mathbf{X}_i))}
+  \mathbb{E}[D_i - \tilde p(\mathbf{X}_i)\mid\mathbf{X}_i]\right].\]</span></p>
+<p>When <span class="math inline">\(\tilde p = p\)</span>, we have <span class="math inline">\(\mathbb{E}[D_i\mid\mathbf{X}_i] = p(\mathbf{X}_i) = \tilde p(\mathbf{X}_i)\)</span>, so <span class="math inline">\(\mathbb{E}[D_i - \tilde p(\mathbf{X}_i)\mid\mathbf{X}_i] = 0\)</span> a.s. The entire bias-correction term vanishes, leaving:</p>
+<p><span class="math display">\[\Gamma(p, \tilde\mu_{0,\Delta}) = \mathbb{E}\!\left[\frac{D_i - p(\mathbf{X}_i)}{\pi(1-p(\mathbf{X}_i))}\Delta Y_i\right] = \text{ATT}.\]</span></p>
+<p>The last equality follows from equation (3.9). <span class="math inline">\(\square\)</span></p>
+<p><em>Proof of (b): OR correct, PS misspecified.</em> Now take <span class="math inline">\(\tilde\mu_{0,\Delta} = \mu_{0,\Delta}\)</span> and arbitrary <span class="math inline">\(\tilde p\)</span>. Write:</p>
+<p><span class="math display">\[\Gamma(\tilde p, \mu_{0,\Delta})
+= \mathbb{E}\!\left[\frac{D_i - \tilde p(\mathbf{X}_i)}{\pi(1-\tilde p(\mathbf{X}_i))}(\Delta Y_i - \mu_{0,\Delta}(\mathbf{X}_i))\right].\]</span></p>
+<p>Condition on <span class="math inline">\(\mathbf{X}_i\)</span>:</p>
+<p><span class="math display">\[= \mathbb{E}\!\left[\frac{\mathbb{E}[(D_i - \tilde p(\mathbf{X}_i))(\Delta Y_i - \mu_{0,\Delta}(\mathbf{X}_i))\mid\mathbf{X}_i]}{\pi(1-\tilde p(\mathbf{X}_i))}\right].\]</span></p>
+<p>The inner conditional expectation factorises. Since <span class="math inline">\(\mu_{0,\Delta}(\mathbf{X}_i) = \mathbb{E}[\Delta Y_i \mid D_i=0, \mathbf{X}_i]\)</span> and <span class="math inline">\(\mathbb{E}[\Delta Y_i \mid D_i, \mathbf{X}_i]\)</span> depends on <span class="math inline">\(D_i\)</span>, we write <span class="math inline">\(\mathbb{E}[\Delta Y_i \mid \mathbf{X}_i] = p(\mathbf{X}_i)\mu_{1,\Delta}(\mathbf{X}_i) + (1-p(\mathbf{X}_i))\mu_{0,\Delta}(\mathbf{X}_i)\)</span>, where <span class="math inline">\(\mu_{1,\Delta}(\mathbf{x}) = \mathbb{E}[\Delta Y_i \mid D_i=1, \mathbf{X}_i=\mathbf{x}]\)</span>. Then:</p>
+<p><span class="math display">\[\mathbb{E}[(D_i-\tilde p)(\Delta Y_i - \mu_{0,\Delta})\mid\mathbf{X}_i]
+= \mathbb{E}[D_i\Delta Y_i\mid\mathbf{X}_i]
+- \tilde p\,\mathbb{E}[\Delta Y_i\mid\mathbf{X}_i]
+- p\,\mu_{0,\Delta} + \tilde p\,\mu_{0,\Delta}.\]</span></p>
+<p>Expanding <span class="math inline">\(\mathbb{E}[D_i\Delta Y_i\mid\mathbf{X}_i] = p\,\mu_{1,\Delta}\)</span>:</p>
+<p><span class="math display">\[= p(\mu_{1,\Delta} - \mu_{0,\Delta}) + (p - \tilde p)(\mu_{0,\Delta} - \mathbb{E}[\Delta Y_i\mid\mathbf{X}_i])\]</span> <span class="math display">\[= p(\mu_{1,\Delta} - \mu_{0,\Delta}) - (p - \tilde p) \cdot p(\mu_{1,\Delta} - \mu_{0,\Delta})\]</span> <span class="math display">\[= p(1-p+\tilde p-\tilde p)(\mu_{1,\Delta}-\mu_{0,\Delta}) \;\text{... simplifying:}\]</span></p>
+<p>A cleaner path: note <span class="math inline">\(\mathbb{E}[\Delta Y_i\mid\mathbf{X}_i] - \mu_{0,\Delta} = p(\mathbf{X}_i)(\mu_{1,\Delta}-\mu_{0,\Delta})\)</span>, so:</p>
+<p><span class="math display">\[\mathbb{E}[(D_i-\tilde p)(\Delta Y_i-\mu_{0,\Delta})\mid\mathbf{X}_i]
+= (p-\tilde p)p(\mu_{1,\Delta}-\mu_{0,\Delta}) + p(\mu_{1,\Delta}-\mu_{0,\Delta}) \cdot (1 - 1 + 1)\]</span></p>
+<p>Direct computation: Using the most direct route, by the law of iterated expectations:</p>
+<p><span class="math display">\[\mathbb{E}[D_i(\Delta Y_i - \mu_{0,\Delta})\mid\mathbf{X}_i]
+= p(\mathbf{X}_i)(\mu_{1,\Delta}(\mathbf{X}_i)-\mu_{0,\Delta}(\mathbf{X}_i)).\]</span></p>
+<p><span class="math display">\[\mathbb{E}[\tilde p(\mathbf{X}_i)(\Delta Y_i - \mu_{0,\Delta}(\mathbf{X}_i))\mid\mathbf{X}_i]
+= \tilde p(\mathbf{X}_i)\cdot\mathbb{E}[\Delta Y_i - \mu_{0,\Delta}\mid\mathbf{X}_i]
+= \tilde p(\mathbf{X}_i)\cdot p(\mathbf{X}_i)(\mu_{1,\Delta}-\mu_{0,\Delta}).\]</span></p>
+<p>Subtracting:</p>
+<p><span class="math display">\[\mathbb{E}[(D_i-\tilde p)(\Delta Y_i-\mu_{0,\Delta})\mid\mathbf{X}_i]
+= (p-\tilde p\cdot p)(\mu_{1,\Delta}-\mu_{0,\Delta})
+= p(1-\tilde p)(\mu_{1,\Delta}-\mu_{0,\Delta}).\]</span></p>
+<p>Substituting back:</p>
+<p><span class="math display">\[\Gamma(\tilde p, \mu_{0,\Delta})
+= \mathbb{E}\!\left[\frac{p(\mathbf{X}_i)(1-\tilde p(\mathbf{X}_i))}{\pi(1-\tilde p(\mathbf{X}_i))}(\mu_{1,\Delta}(\mathbf{X}_i)-\mu_{0,\Delta}(\mathbf{X}_i))\right]
+= \frac{1}{\pi}\mathbb{E}\!\left[p(\mathbf{X}_i)(\mu_{1,\Delta}-\mu_{0,\Delta})\right].\]</span></p>
+<p>Since <span class="math inline">\(\mathbb{E}[p(\mathbf{X}_i)(\mu_{1,\Delta}-\mu_{0,\Delta})] = \pi\,\mathbb{E}[\mu_{1,\Delta}(\mathbf{X}_i)-\mu_{0,\Delta}(\mathbf{X}_i)\mid D_i=1] = \pi\cdot\text{ATT}\)</span>, we obtain <span class="math inline">\(\Gamma(\tilde p,\mu_{0,\Delta}) = \text{ATT}\)</span>, regardless of <span class="math inline">\(\tilde p\)</span>. <span class="math inline">\(\square\)</span></p>
+</section>
+<section id="the-sample-dr-did-estimator" class="level3" data-number="3.3.4">
+<h3 data-number="3.3.4" class="anchored" data-anchor-id="the-sample-dr-did-estimator"><span class="header-section-number">3.3.4</span> The Sample DR-DiD Estimator</h3>
+<p><span class="citation" data-cites="santanna2020">Sant’Anna &amp; Zhao (<a href="references.html#ref-santanna2020" role="doc-biblioref">2020</a>)</span> propose the following sample analogue of (3.16). Let <span class="math inline">\(\hat p(\mathbf{X}_i)\)</span> be a parametric (e.g., logistic) propensity-score estimate and <span class="math inline">\(\hat\mu_{0,\Delta}(\mathbf{X}_i)\)</span> be a parametric (e.g., linear) outcome-regression estimate of <span class="math inline">\(\mathbb{E}[\Delta Y_i \mid D_i=0, \mathbf{X}_i]\)</span>. Define the estimated DR weight:</p>
+<p><span class="math display">\[\hat w_i^{\text{dr}}
+\equiv \frac{D_i - \hat p(\mathbf{X}_i)}{\hat\pi\,(1-\hat p(\mathbf{X}_i))},
+\qquad \hat\pi = n^{-1}\sum_i D_i. \tag{3.18}\]</span></p>
+<p>The DR-DiD estimator is:</p>
+<p><span class="math display">\[\widehat{\text{ATT}}_{\text{DR}}
+= \frac{1}{n}\sum_{i=1}^n
+\hat w_i^{\text{dr}}\bigl(\Delta Y_i - \hat\mu_{0,\Delta}(\mathbf{X}_i)\bigr). \tag{3.19}\]</span></p>
+<p>Equivalently, (3.19) can be decomposed as:</p>
+<p><span class="math display">\[\widehat{\text{ATT}}_{\text{DR}}
+= \underbrace{\frac{1}{n_1}\sum_{D_i=1}(\Delta Y_i - \hat\mu_{0,\Delta}(\mathbf{X}_i))}_{\text{OR-adjusted treated mean change}}
+- \underbrace{\frac{\displaystyle\sum_{D_i=0}\hat\omega_i(\Delta Y_i-\hat\mu_{0,\Delta}(\mathbf{X}_i))}{\displaystyle\sum_{D_i=0}\hat\omega_i}}_{\text{IPW-adjusted control residual}}, \tag{3.20}\]</span></p>
+<p>where <span class="math inline">\(\hat\omega_i = \hat p(\mathbf{X}_i)/(1-\hat p(\mathbf{X}_i))\)</span> are the odds-of-treatment weights for control units. Equation (3.20) reveals the estimator’s intuition clearly: it subtracts from the treated group’s <em>regression-adjusted</em> average change the regression-adjusted average change of a <em>propensity-score–reweighted</em> control group. The outcome regression removes the portion of the covariate effect that can be modelled linearly; the propensity-score reweighting removes the remaining compositional difference. Both corrections would eliminate bias on their own if their respective models were correctly specified; together, they provide insurance against either model’s misspecification.</p>
+</section>
+<section id="efficiency-and-the-semiparametric-efficiency-bound" class="level3" data-number="3.3.5">
+<h3 data-number="3.3.5" class="anchored" data-anchor-id="efficiency-and-the-semiparametric-efficiency-bound"><span class="header-section-number">3.3.5</span> Efficiency and the Semiparametric Efficiency Bound</h3>
+<p><span class="citation" data-cites="santanna2020">Sant’Anna &amp; Zhao (<a href="references.html#ref-santanna2020" role="doc-biblioref">2020</a>)</span> show that, when both models are correctly specified and estimated at parametric rates, <span class="math inline">\(\widehat{\text{ATT}}_{\text{DR}}\)</span> achieves the <strong>semiparametric efficiency bound</strong> for the ATT under CPTA derived by <span class="citation" data-cites="hahn1998">Hahn (<a href="references.html#ref-hahn1998" role="doc-biblioref">1998</a>)</span> in the cross-sectional analogue. This means no regular estimator can have smaller asymptotic variance in the class of models satisfying CPTA and overlap. When the propensity score is modelled correctly but the outcome regression is not (or vice versa), the estimator remains consistent but generally loses efficiency relative to the bound — a mild price for the robustness it purchases.</p>
+</section>
+<section id="inference" class="level3" data-number="3.3.6">
+<h3 data-number="3.3.6" class="anchored" data-anchor-id="inference"><span class="header-section-number">3.3.6</span> Inference</h3>
+<p><span class="citation" data-cites="santanna2020">Sant’Anna &amp; Zhao (<a href="references.html#ref-santanna2020" role="doc-biblioref">2020</a>)</span> derive the influence-function representation of <span class="math inline">\(\widehat{\text{ATT}}_{\text{DR}}\)</span>, which enables analytical standard errors. The influence function for unit <span class="math inline">\(i\)</span> is:</p>
+<p><span class="math display">\[\psi_i = \hat w_i^{\text{dr}}\bigl(\Delta Y_i - \hat\mu_{0,\Delta}(\mathbf{X}_i)\bigr)
+- \widehat{\text{ATT}}_{\text{DR}}, \tag{3.21}\]</span></p>
+<p>and the asymptotic variance is <span class="math inline">\(V = \mathbb{E}[\psi_i^2]\)</span>. A consistent estimator is <span class="math inline">\(\hat V = n^{-2}\sum_i \hat\psi_i^2\)</span>, yielding standard error <span class="math inline">\(\widehat{\text{se}}(\widehat{\text{ATT}}_{\text{DR}}) = \sqrt{\hat V/n}\)</span>. The <code>DRDID</code> R package <span class="citation" data-cites="santanna2020">(<a href="references.html#ref-santanna2020" role="doc-biblioref">Sant’Anna &amp; Zhao, 2020</a>)</span> implements both this analytical estimator and the clustered bootstrap, the latter being preferred when <span class="math inline">\(n\)</span> is moderate or when propensity-score estimation is non-parametric.</p>
+<hr>
+</section>
+</section>
+<section id="sec-ipwdr-empirics" class="level2" data-number="3.4">
+<h2 data-number="3.4" class="anchored" data-anchor-id="sec-ipwdr-empirics"><span class="header-section-number">3.4</span> Empirical Illustration in R</h2>
+<p>This section demonstrates IPW-DiD and DR-DiD on a simulated dataset that mimics a common applied scenario: treatment probability varies with age and baseline income (so unconditional PTA fails), but conditional PTA holds after adjusting for these two covariates. We estimate three ATT estimators — OLS-DiD (naive, misspecified), IPW-DiD (stabilised), and DR-DiD — and compare their performance. All estimators are implemented via the <code>DRDID</code> package <span class="citation" data-cites="santanna2020">(<a href="references.html#ref-santanna2020" role="doc-biblioref">Sant’Anna &amp; Zhao, 2020</a>)</span>.</p>
+<section id="data-generating-process" class="level3 unnumbered">
+<h3 class="unnumbered anchored" data-anchor-id="data-generating-process">Data Generating Process</h3>
+<div class="cell">
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb1"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb1-1"><a href="#cb1-1" aria-hidden="true" tabindex="-1"></a><span class="fu">library</span>(tidyverse)</span>
+<span id="cb1-2"><a href="#cb1-2" aria-hidden="true" tabindex="-1"></a><span class="fu">library</span>(DRDID)</span>
+<span id="cb1-3"><a href="#cb1-3" aria-hidden="true" tabindex="-1"></a><span class="fu">library</span>(modelsummary)</span>
+<span id="cb1-4"><a href="#cb1-4" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-5"><a href="#cb1-5" aria-hidden="true" tabindex="-1"></a><span class="fu">set.seed</span>(<span class="dv">2025</span>)</span>
+<span id="cb1-6"><a href="#cb1-6" aria-hidden="true" tabindex="-1"></a>n <span class="ot">&lt;-</span> <span class="dv">1000</span></span>
+<span id="cb1-7"><a href="#cb1-7" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-8"><a href="#cb1-8" aria-hidden="true" tabindex="-1"></a><span class="co"># Pre-treatment covariates</span></span>
+<span id="cb1-9"><a href="#cb1-9" aria-hidden="true" tabindex="-1"></a>age    <span class="ot">&lt;-</span> <span class="fu">runif</span>(n, <span class="dv">25</span>, <span class="dv">60</span>)</span>
+<span id="cb1-10"><a href="#cb1-10" aria-hidden="true" tabindex="-1"></a>income <span class="ot">&lt;-</span> <span class="dv">20</span> <span class="sc">+</span> <span class="fl">0.3</span> <span class="sc">*</span> age <span class="sc">+</span> <span class="fu">rnorm</span>(n, <span class="at">sd =</span> <span class="dv">5</span>)</span>
+<span id="cb1-11"><a href="#cb1-11" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-12"><a href="#cb1-12" aria-hidden="true" tabindex="-1"></a><span class="co"># True propensity score (logistic)</span></span>
+<span id="cb1-13"><a href="#cb1-13" aria-hidden="true" tabindex="-1"></a>log_odds <span class="ot">&lt;-</span> <span class="sc">-</span><span class="dv">3</span> <span class="sc">+</span> <span class="fl">0.06</span> <span class="sc">*</span> age <span class="sc">+</span> <span class="fl">0.04</span> <span class="sc">*</span> income</span>
+<span id="cb1-14"><a href="#cb1-14" aria-hidden="true" tabindex="-1"></a>p_true   <span class="ot">&lt;-</span> <span class="fu">plogis</span>(log_odds)</span>
+<span id="cb1-15"><a href="#cb1-15" aria-hidden="true" tabindex="-1"></a>D        <span class="ot">&lt;-</span> <span class="fu">rbinom</span>(n, <span class="dv">1</span>, p_true)</span>
+<span id="cb1-16"><a href="#cb1-16" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-17"><a href="#cb1-17" aria-hidden="true" tabindex="-1"></a><span class="co"># Counterfactual trend depends on covariates → unconditional PTA fails</span></span>
+<span id="cb1-18"><a href="#cb1-18" aria-hidden="true" tabindex="-1"></a>mu0_delta <span class="ot">&lt;-</span> <span class="fl">0.5</span> <span class="sc">*</span> (age <span class="sc">-</span> <span class="fu">mean</span>(age)) <span class="sc">/</span> <span class="fu">sd</span>(age) <span class="sc">+</span></span>
+<span id="cb1-19"><a href="#cb1-19" aria-hidden="true" tabindex="-1"></a>             <span class="fl">0.3</span> <span class="sc">*</span> (income <span class="sc">-</span> <span class="fu">mean</span>(income)) <span class="sc">/</span> <span class="fu">sd</span>(income)</span>
+<span id="cb1-20"><a href="#cb1-20" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-21"><a href="#cb1-21" aria-hidden="true" tabindex="-1"></a>ATT_true  <span class="ot">&lt;-</span> <span class="dv">2</span></span>
+<span id="cb1-22"><a href="#cb1-22" aria-hidden="true" tabindex="-1"></a>Y0        <span class="ot">&lt;-</span> <span class="dv">10</span> <span class="sc">+</span> <span class="fu">rnorm</span>(n)                          <span class="co"># baseline outcome</span></span>
+<span id="cb1-23"><a href="#cb1-23" aria-hidden="true" tabindex="-1"></a>Y1        <span class="ot">&lt;-</span> Y0 <span class="sc">+</span> mu0_delta <span class="sc">+</span> D <span class="sc">*</span> ATT_true <span class="sc">+</span> <span class="fu">rnorm</span>(n)  <span class="co"># post outcome</span></span>
+<span id="cb1-24"><a href="#cb1-24" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-25"><a href="#cb1-25" aria-hidden="true" tabindex="-1"></a><span class="co"># Wide-format tibble (one row per unit)</span></span>
+<span id="cb1-26"><a href="#cb1-26" aria-hidden="true" tabindex="-1"></a>df_wide <span class="ot">&lt;-</span> <span class="fu">tibble</span>(</span>
+<span id="cb1-27"><a href="#cb1-27" aria-hidden="true" tabindex="-1"></a>  <span class="at">id      =</span> <span class="dv">1</span><span class="sc">:</span>n,</span>
+<span id="cb1-28"><a href="#cb1-28" aria-hidden="true" tabindex="-1"></a>  <span class="at">D       =</span> D,</span>
+<span id="cb1-29"><a href="#cb1-29" aria-hidden="true" tabindex="-1"></a>  <span class="at">Y0      =</span> Y0,</span>
+<span id="cb1-30"><a href="#cb1-30" aria-hidden="true" tabindex="-1"></a>  <span class="at">Y1      =</span> Y1,</span>
+<span id="cb1-31"><a href="#cb1-31" aria-hidden="true" tabindex="-1"></a>  <span class="at">DeltaY  =</span> Y1 <span class="sc">-</span> Y0,</span>
+<span id="cb1-32"><a href="#cb1-32" aria-hidden="true" tabindex="-1"></a>  <span class="at">age     =</span> age,</span>
+<span id="cb1-33"><a href="#cb1-33" aria-hidden="true" tabindex="-1"></a>  <span class="at">income  =</span> income,</span>
+<span id="cb1-34"><a href="#cb1-34" aria-hidden="true" tabindex="-1"></a>  <span class="at">age_s   =</span> <span class="fu">as.vector</span>(<span class="fu">scale</span>(age)),</span>
+<span id="cb1-35"><a href="#cb1-35" aria-hidden="true" tabindex="-1"></a>  <span class="at">income_s =</span> <span class="fu">as.vector</span>(<span class="fu">scale</span>(income))</span>
+<span id="cb1-36"><a href="#cb1-36" aria-hidden="true" tabindex="-1"></a>)</span>
+<span id="cb1-37"><a href="#cb1-37" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-38"><a href="#cb1-38" aria-hidden="true" tabindex="-1"></a><span class="co"># Long-format panel required by DRDID (two rows per unit: t=0 and t=1)</span></span>
+<span id="cb1-39"><a href="#cb1-39" aria-hidden="true" tabindex="-1"></a>df_long <span class="ot">&lt;-</span> <span class="fu">bind_rows</span>(</span>
+<span id="cb1-40"><a href="#cb1-40" aria-hidden="true" tabindex="-1"></a>  df_wide <span class="sc">|&gt;</span> <span class="fu">mutate</span>(<span class="at">year =</span> <span class="dv">0</span>, <span class="at">Y =</span> Y0),</span>
+<span id="cb1-41"><a href="#cb1-41" aria-hidden="true" tabindex="-1"></a>  df_wide <span class="sc">|&gt;</span> <span class="fu">mutate</span>(<span class="at">year =</span> <span class="dv">1</span>, <span class="at">Y =</span> Y1)</span>
+<span id="cb1-42"><a href="#cb1-42" aria-hidden="true" tabindex="-1"></a>) <span class="sc">|&gt;</span> <span class="fu">arrange</span>(id, year)</span>
+<span id="cb1-43"><a href="#cb1-43" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-44"><a href="#cb1-44" aria-hidden="true" tabindex="-1"></a><span class="fu">cat</span>(<span class="st">"True ATT:"</span>, ATT_true, <span class="st">"</span><span class="sc">\n</span><span class="st">"</span>)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>True ATT: 2 </code></pre>
+</div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb3"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb3-1"><a href="#cb3-1" aria-hidden="true" tabindex="-1"></a><span class="fu">cat</span>(<span class="st">"Proportion treated:"</span>, <span class="fu">round</span>(<span class="fu">mean</span>(D), <span class="dv">3</span>), <span class="st">"</span><span class="sc">\n</span><span class="st">"</span>)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>Proportion treated: 0.717 </code></pre>
+</div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb5"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb5-1"><a href="#cb5-1" aria-hidden="true" tabindex="-1"></a><span class="fu">cat</span>(<span class="fu">sprintf</span>(<span class="st">"Propensity score range: [%.3f, %.3f]</span><span class="sc">\n</span><span class="st">"</span>,</span>
+<span id="cb5-2"><a href="#cb5-2" aria-hidden="true" tabindex="-1"></a>            <span class="fu">min</span>(p_true), <span class="fu">max</span>(p_true)))</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>Propensity score range: [0.330, 0.926]</code></pre>
+</div>
+</div>
+</section>
+<section id="covariate-imbalance-and-unconditional-pta-failure" class="level3 unnumbered">
+<h3 class="unnumbered anchored" data-anchor-id="covariate-imbalance-and-unconditional-pta-failure">Covariate Imbalance and Unconditional PTA Failure</h3>
+<div class="cell">
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb7"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb7-1"><a href="#cb7-1" aria-hidden="true" tabindex="-1"></a>p_age <span class="ot">&lt;-</span> <span class="fu">ggplot</span>(df_wide, <span class="fu">aes</span>(<span class="at">x =</span> age, <span class="at">fill =</span> <span class="fu">factor</span>(D))) <span class="sc">+</span></span>
+<span id="cb7-2"><a href="#cb7-2" aria-hidden="true" tabindex="-1"></a>  <span class="fu">geom_density</span>(<span class="at">alpha =</span> <span class="fl">0.5</span>) <span class="sc">+</span></span>
+<span id="cb7-3"><a href="#cb7-3" aria-hidden="true" tabindex="-1"></a>  <span class="fu">scale_fill_manual</span>(<span class="at">values =</span> <span class="fu">c</span>(<span class="st">"#2166ac"</span>, <span class="st">"#d73027"</span>),</span>
+<span id="cb7-4"><a href="#cb7-4" aria-hidden="true" tabindex="-1"></a>                    <span class="at">labels =</span> <span class="fu">c</span>(<span class="st">"Control"</span>, <span class="st">"Treated"</span>)) <span class="sc">+</span></span>
+<span id="cb7-5"><a href="#cb7-5" aria-hidden="true" tabindex="-1"></a>  <span class="fu">labs</span>(<span class="at">x =</span> <span class="st">"Age"</span>, <span class="at">y =</span> <span class="st">"Density"</span>, <span class="at">fill =</span> <span class="cn">NULL</span>,</span>
+<span id="cb7-6"><a href="#cb7-6" aria-hidden="true" tabindex="-1"></a>       <span class="at">title =</span> <span class="st">"Age distribution"</span>) <span class="sc">+</span></span>
+<span id="cb7-7"><a href="#cb7-7" aria-hidden="true" tabindex="-1"></a>  <span class="fu">theme_minimal</span>(<span class="at">base_size =</span> <span class="dv">11</span>) <span class="sc">+</span></span>
+<span id="cb7-8"><a href="#cb7-8" aria-hidden="true" tabindex="-1"></a>  <span class="fu">theme</span>(<span class="at">legend.position =</span> <span class="st">"bottom"</span>, <span class="at">panel.grid.minor =</span> <span class="fu">element_blank</span>())</span>
+<span id="cb7-9"><a href="#cb7-9" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb7-10"><a href="#cb7-10" aria-hidden="true" tabindex="-1"></a>p_inc <span class="ot">&lt;-</span> <span class="fu">ggplot</span>(df_wide, <span class="fu">aes</span>(<span class="at">x =</span> income, <span class="at">fill =</span> <span class="fu">factor</span>(D))) <span class="sc">+</span></span>
+<span id="cb7-11"><a href="#cb7-11" aria-hidden="true" tabindex="-1"></a>  <span class="fu">geom_density</span>(<span class="at">alpha =</span> <span class="fl">0.5</span>) <span class="sc">+</span></span>
+<span id="cb7-12"><a href="#cb7-12" aria-hidden="true" tabindex="-1"></a>  <span class="fu">scale_fill_manual</span>(<span class="at">values =</span> <span class="fu">c</span>(<span class="st">"#2166ac"</span>, <span class="st">"#d73027"</span>),</span>
+<span id="cb7-13"><a href="#cb7-13" aria-hidden="true" tabindex="-1"></a>                    <span class="at">labels =</span> <span class="fu">c</span>(<span class="st">"Control"</span>, <span class="st">"Treated"</span>)) <span class="sc">+</span></span>
+<span id="cb7-14"><a href="#cb7-14" aria-hidden="true" tabindex="-1"></a>  <span class="fu">labs</span>(<span class="at">x =</span> <span class="st">"Income"</span>, <span class="at">y =</span> <span class="st">"Density"</span>, <span class="at">fill =</span> <span class="cn">NULL</span>,</span>
+<span id="cb7-15"><a href="#cb7-15" aria-hidden="true" tabindex="-1"></a>       <span class="at">title =</span> <span class="st">"Income distribution"</span>) <span class="sc">+</span></span>
+<span id="cb7-16"><a href="#cb7-16" aria-hidden="true" tabindex="-1"></a>  <span class="fu">theme_minimal</span>(<span class="at">base_size =</span> <span class="dv">11</span>) <span class="sc">+</span></span>
+<span id="cb7-17"><a href="#cb7-17" aria-hidden="true" tabindex="-1"></a>  <span class="fu">theme</span>(<span class="at">legend.position =</span> <span class="st">"bottom"</span>, <span class="at">panel.grid.minor =</span> <span class="fu">element_blank</span>())</span>
+<span id="cb7-18"><a href="#cb7-18" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb7-19"><a href="#cb7-19" aria-hidden="true" tabindex="-1"></a>p_age <span class="sc">+</span> p_inc <span class="sc">+</span> <span class="fu">plot_layout</span>(<span class="at">guides =</span> <span class="st">"collect"</span>) <span class="sc">&amp;</span></span>
+<span id="cb7-20"><a href="#cb7-20" aria-hidden="true" tabindex="-1"></a>  <span class="fu">theme</span>(<span class="at">legend.position =</span> <span class="st">"bottom"</span>)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="cell-output-display">
+<div id="fig-imbalance" class="quarto-float quarto-figure quarto-figure-center anchored">
+<figure class="quarto-float quarto-float-fig figure">
+<div aria-describedby="fig-imbalance-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
+<img src="chapter3_files/figure-html/fig-imbalance-1.png" class="img-fluid figure-img" width="768">
+</div>
+<figcaption class="quarto-float-caption-bottom quarto-float-caption quarto-float-fig" id="fig-imbalance-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
+Figure&nbsp;3.1: Covariate distributions by treatment status. Treated units are older and have higher income, generating differential counterfactual trends that violate unconditional PTA.
+</figcaption>
+</figure>
+</div>
+</div>
+</div>
+<p>The density plots confirm that treated units skew older and have higher income. Because both variables shift the counterfactual trend <span class="math inline">\(\mu_{0,\Delta}(\mathbf{X}_i)\)</span>, the raw DiD estimator — which ignores this composition — will overstate the ATT.</p>
+</section>
+<section id="propensity-score-estimation-and-overlap-check" class="level3 unnumbered">
+<h3 class="unnumbered anchored" data-anchor-id="propensity-score-estimation-and-overlap-check">Propensity Score Estimation and Overlap Check</h3>
+<div class="cell">
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb8"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb8-1"><a href="#cb8-1" aria-hidden="true" tabindex="-1"></a><span class="co"># Estimate propensity score via logistic regression</span></span>
+<span id="cb8-2"><a href="#cb8-2" aria-hidden="true" tabindex="-1"></a>ps_fit   <span class="ot">&lt;-</span> <span class="fu">glm</span>(D <span class="sc">~</span> age_s <span class="sc">+</span> income_s, <span class="at">data =</span> df_wide, <span class="at">family =</span> binomial)</span>
+<span id="cb8-3"><a href="#cb8-3" aria-hidden="true" tabindex="-1"></a>df_wide  <span class="ot">&lt;-</span> df_wide <span class="sc">|&gt;</span> <span class="fu">mutate</span>(<span class="at">phat =</span> <span class="fu">fitted</span>(ps_fit))</span>
+<span id="cb8-4"><a href="#cb8-4" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb8-5"><a href="#cb8-5" aria-hidden="true" tabindex="-1"></a><span class="fu">ggplot</span>(df_wide, <span class="fu">aes</span>(<span class="at">x =</span> phat, <span class="at">fill =</span> <span class="fu">factor</span>(D))) <span class="sc">+</span></span>
+<span id="cb8-6"><a href="#cb8-6" aria-hidden="true" tabindex="-1"></a>  <span class="fu">geom_histogram</span>(<span class="fu">aes</span>(<span class="at">y =</span> <span class="fu">after_stat</span>(density)),</span>
+<span id="cb8-7"><a href="#cb8-7" aria-hidden="true" tabindex="-1"></a>                 <span class="at">bins =</span> <span class="dv">40</span>, <span class="at">alpha =</span> <span class="fl">0.55</span>, <span class="at">position =</span> <span class="st">"identity"</span>) <span class="sc">+</span></span>
+<span id="cb8-8"><a href="#cb8-8" aria-hidden="true" tabindex="-1"></a>  <span class="fu">scale_fill_manual</span>(<span class="at">values =</span> <span class="fu">c</span>(<span class="st">"#2166ac"</span>, <span class="st">"#d73027"</span>),</span>
+<span id="cb8-9"><a href="#cb8-9" aria-hidden="true" tabindex="-1"></a>                    <span class="at">labels =</span> <span class="fu">c</span>(<span class="st">"Control"</span>, <span class="st">"Treated"</span>)) <span class="sc">+</span></span>
+<span id="cb8-10"><a href="#cb8-10" aria-hidden="true" tabindex="-1"></a>  <span class="fu">labs</span>(<span class="at">x =</span> <span class="st">"Estimated propensity score"</span>, <span class="at">y =</span> <span class="st">"Density"</span>, <span class="at">fill =</span> <span class="cn">NULL</span>) <span class="sc">+</span></span>
+<span id="cb8-11"><a href="#cb8-11" aria-hidden="true" tabindex="-1"></a>  <span class="fu">theme_minimal</span>(<span class="at">base_size =</span> <span class="dv">11</span>) <span class="sc">+</span></span>
+<span id="cb8-12"><a href="#cb8-12" aria-hidden="true" tabindex="-1"></a>  <span class="fu">theme</span>(<span class="at">legend.position =</span> <span class="st">"bottom"</span>, <span class="at">panel.grid.minor =</span> <span class="fu">element_blank</span>())</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="cell-output-display">
+<div id="fig-pscore" class="quarto-float quarto-figure quarto-figure-center anchored">
+<figure class="quarto-float quarto-float-fig figure">
+<div aria-describedby="fig-pscore-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
+<img src="chapter3_files/figure-html/fig-pscore-1.png" class="img-fluid figure-img" width="576">
+</div>
+<figcaption class="quarto-float-caption-bottom quarto-float-caption quarto-float-fig" id="fig-pscore-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
+Figure&nbsp;3.2: Estimated propensity scores by treatment status. Substantial overlap exists across the full range, satisfying the overlap assumption. No mass is visible near 0 or 1.
+</figcaption>
+</figure>
+</div>
+</div>
+</div>
+<div class="cell">
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb9"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb9-1"><a href="#cb9-1" aria-hidden="true" tabindex="-1"></a>df_wide <span class="sc">|&gt;</span></span>
+<span id="cb9-2"><a href="#cb9-2" aria-hidden="true" tabindex="-1"></a>  <span class="fu">group_by</span>(D) <span class="sc">|&gt;</span></span>
+<span id="cb9-3"><a href="#cb9-3" aria-hidden="true" tabindex="-1"></a>  <span class="fu">summarise</span>(</span>
+<span id="cb9-4"><a href="#cb9-4" aria-hidden="true" tabindex="-1"></a>    <span class="at">n      =</span> <span class="fu">n</span>(),</span>
+<span id="cb9-5"><a href="#cb9-5" aria-hidden="true" tabindex="-1"></a>    <span class="at">ps_min =</span> <span class="fu">round</span>(<span class="fu">min</span>(phat), <span class="dv">3</span>),</span>
+<span id="cb9-6"><a href="#cb9-6" aria-hidden="true" tabindex="-1"></a>    <span class="at">ps_p25 =</span> <span class="fu">round</span>(<span class="fu">quantile</span>(phat, <span class="fl">0.25</span>), <span class="dv">3</span>),</span>
+<span id="cb9-7"><a href="#cb9-7" aria-hidden="true" tabindex="-1"></a>    <span class="at">ps_med =</span> <span class="fu">round</span>(<span class="fu">median</span>(phat), <span class="dv">3</span>),</span>
+<span id="cb9-8"><a href="#cb9-8" aria-hidden="true" tabindex="-1"></a>    <span class="at">ps_p75 =</span> <span class="fu">round</span>(<span class="fu">quantile</span>(phat, <span class="fl">0.75</span>), <span class="dv">3</span>),</span>
+<span id="cb9-9"><a href="#cb9-9" aria-hidden="true" tabindex="-1"></a>    <span class="at">ps_max =</span> <span class="fu">round</span>(<span class="fu">max</span>(phat), <span class="dv">3</span>)</span>
+<span id="cb9-10"><a href="#cb9-10" aria-hidden="true" tabindex="-1"></a>  ) <span class="sc">|&gt;</span></span>
+<span id="cb9-11"><a href="#cb9-11" aria-hidden="true" tabindex="-1"></a>  knitr<span class="sc">::</span><span class="fu">kable</span>(<span class="at">col.names =</span> <span class="fu">c</span>(<span class="st">"D"</span>, <span class="st">"n"</span>, <span class="st">"Min"</span>, <span class="st">"P25"</span>, <span class="st">"Median"</span>, <span class="st">"P75"</span>, <span class="st">"Max"</span>),</span>
+<span id="cb9-12"><a href="#cb9-12" aria-hidden="true" tabindex="-1"></a>               <span class="at">caption =</span> <span class="st">"Propensity score distribution by treatment group"</span>)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="cell-output-display">
+<table class="caption-top table table-sm table-striped small">
+<caption>Propensity score distribution by treatment group</caption>
+<thead>
+<tr class="header">
+<th style="text-align: right;">D</th>
+<th style="text-align: right;">n</th>
+<th style="text-align: right;">Min</th>
+<th style="text-align: right;">P25</th>
+<th style="text-align: right;">Median</th>
+<th style="text-align: right;">P75</th>
+<th style="text-align: right;">Max</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td style="text-align: right;">0</td>
+<td style="text-align: right;">283</td>
+<td style="text-align: right;">0.304</td>
+<td style="text-align: right;">0.489</td>
+<td style="text-align: right;">0.607</td>
+<td style="text-align: right;">0.736</td>
+<td style="text-align: right;">0.945</td>
+</tr>
+<tr class="even">
+<td style="text-align: right;">1</td>
+<td style="text-align: right;">717</td>
+<td style="text-align: right;">0.328</td>
+<td style="text-align: right;">0.654</td>
+<td style="text-align: right;">0.805</td>
+<td style="text-align: right;">0.886</td>
+<td style="text-align: right;">0.957</td>
+</tr>
+</tbody>
+</table>
+</div>
+</div>
+<p>The estimated propensity scores have good overlap: the interquartile ranges of the two groups overlap substantially, and no scores are near 0 or 1. No trimming is required in this simulation.</p>
+</section>
+<section id="estimating-the-att" class="level3 unnumbered">
+<h3 class="unnumbered anchored" data-anchor-id="estimating-the-att">Estimating the ATT</h3>
+<p>We estimate four versions of the ATT: (1) naive OLS-DiD on <span class="math inline">\(\Delta Y_i\)</span>, ignoring covariates; (2) OLS-DiD with covariate adjustment (outcome regression only, no IPW); (3) IPW-DiD with stabilised weights; and (4) DR-DiD. The <code>DRDID</code> package provides a unified interface.</p>
+<div class="cell">
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb10"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb10-1"><a href="#cb10-1" aria-hidden="true" tabindex="-1"></a><span class="co"># 1. Naive OLS-DiD: regress DeltaY on D (wide format)</span></span>
+<span id="cb10-2"><a href="#cb10-2" aria-hidden="true" tabindex="-1"></a>att_ols <span class="ot">&lt;-</span> <span class="fu">lm</span>(DeltaY <span class="sc">~</span> D, <span class="at">data =</span> df_wide)</span>
+<span id="cb10-3"><a href="#cb10-3" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb10-4"><a href="#cb10-4" aria-hidden="true" tabindex="-1"></a><span class="co"># 2. OR-adjusted DiD (outcome regression only, Eq. 3.6)</span></span>
+<span id="cb10-5"><a href="#cb10-5" aria-hidden="true" tabindex="-1"></a>att_or  <span class="ot">&lt;-</span> <span class="fu">lm</span>(DeltaY <span class="sc">~</span> D <span class="sc">+</span> age_s <span class="sc">+</span> income_s, <span class="at">data =</span> df_wide)</span>
+<span id="cb10-6"><a href="#cb10-6" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb10-7"><a href="#cb10-7" aria-hidden="true" tabindex="-1"></a><span class="co"># DRDID functions take a long-panel data frame with named columns.</span></span>
+<span id="cb10-8"><a href="#cb10-8" aria-hidden="true" tabindex="-1"></a><span class="co"># 3. Stabilised IPW-DiD (Eq. 3.12)</span></span>
+<span id="cb10-9"><a href="#cb10-9" aria-hidden="true" tabindex="-1"></a>att_ipw <span class="ot">&lt;-</span> <span class="fu">ipwdid</span>(</span>
+<span id="cb10-10"><a href="#cb10-10" aria-hidden="true" tabindex="-1"></a>  <span class="at">yname   =</span> <span class="st">"Y"</span>,</span>
+<span id="cb10-11"><a href="#cb10-11" aria-hidden="true" tabindex="-1"></a>  <span class="at">tname   =</span> <span class="st">"year"</span>,</span>
+<span id="cb10-12"><a href="#cb10-12" aria-hidden="true" tabindex="-1"></a>  <span class="at">idname  =</span> <span class="st">"id"</span>,</span>
+<span id="cb10-13"><a href="#cb10-13" aria-hidden="true" tabindex="-1"></a>  <span class="at">dname   =</span> <span class="st">"D"</span>,</span>
+<span id="cb10-14"><a href="#cb10-14" aria-hidden="true" tabindex="-1"></a>  <span class="at">xformla =</span> <span class="sc">~</span> age_s <span class="sc">+</span> income_s,</span>
+<span id="cb10-15"><a href="#cb10-15" aria-hidden="true" tabindex="-1"></a>  <span class="at">data    =</span> df_long</span>
+<span id="cb10-16"><a href="#cb10-16" aria-hidden="true" tabindex="-1"></a>)</span>
+<span id="cb10-17"><a href="#cb10-17" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb10-18"><a href="#cb10-18" aria-hidden="true" tabindex="-1"></a><span class="co"># 4. DR-DiD (Eq. 3.19)</span></span>
+<span id="cb10-19"><a href="#cb10-19" aria-hidden="true" tabindex="-1"></a>att_drdid <span class="ot">&lt;-</span> <span class="fu">drdid</span>(</span>
+<span id="cb10-20"><a href="#cb10-20" aria-hidden="true" tabindex="-1"></a>  <span class="at">yname   =</span> <span class="st">"Y"</span>,</span>
+<span id="cb10-21"><a href="#cb10-21" aria-hidden="true" tabindex="-1"></a>  <span class="at">tname   =</span> <span class="st">"year"</span>,</span>
+<span id="cb10-22"><a href="#cb10-22" aria-hidden="true" tabindex="-1"></a>  <span class="at">idname  =</span> <span class="st">"id"</span>,</span>
+<span id="cb10-23"><a href="#cb10-23" aria-hidden="true" tabindex="-1"></a>  <span class="at">dname   =</span> <span class="st">"D"</span>,</span>
+<span id="cb10-24"><a href="#cb10-24" aria-hidden="true" tabindex="-1"></a>  <span class="at">xformla =</span> <span class="sc">~</span> age_s <span class="sc">+</span> income_s,</span>
+<span id="cb10-25"><a href="#cb10-25" aria-hidden="true" tabindex="-1"></a>  <span class="at">data    =</span> df_long,</span>
+<span id="cb10-26"><a href="#cb10-26" aria-hidden="true" tabindex="-1"></a>  <span class="at">inffunc =</span> <span class="cn">TRUE</span></span>
+<span id="cb10-27"><a href="#cb10-27" aria-hidden="true" tabindex="-1"></a>)</span>
+<span id="cb10-28"><a href="#cb10-28" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb10-29"><a href="#cb10-29" aria-hidden="true" tabindex="-1"></a><span class="co"># Collect results</span></span>
+<span id="cb10-30"><a href="#cb10-30" aria-hidden="true" tabindex="-1"></a>results <span class="ot">&lt;-</span> <span class="fu">tibble</span>(</span>
+<span id="cb10-31"><a href="#cb10-31" aria-hidden="true" tabindex="-1"></a>  <span class="at">Estimator =</span> <span class="fu">c</span>(<span class="st">"Naive OLS-DiD"</span>,</span>
+<span id="cb10-32"><a href="#cb10-32" aria-hidden="true" tabindex="-1"></a>                <span class="st">"OR-adjusted DiD"</span>,</span>
+<span id="cb10-33"><a href="#cb10-33" aria-hidden="true" tabindex="-1"></a>                <span class="st">"IPW-DiD (stabilised)"</span>,</span>
+<span id="cb10-34"><a href="#cb10-34" aria-hidden="true" tabindex="-1"></a>                <span class="st">"DR-DiD"</span>),</span>
+<span id="cb10-35"><a href="#cb10-35" aria-hidden="true" tabindex="-1"></a>  <span class="at">ATT =</span> <span class="fu">c</span>(<span class="fu">coef</span>(att_ols)[<span class="st">"D"</span>],</span>
+<span id="cb10-36"><a href="#cb10-36" aria-hidden="true" tabindex="-1"></a>          <span class="fu">coef</span>(att_or)[<span class="st">"D"</span>],</span>
+<span id="cb10-37"><a href="#cb10-37" aria-hidden="true" tabindex="-1"></a>          att_ipw<span class="sc">$</span>ATT,</span>
+<span id="cb10-38"><a href="#cb10-38" aria-hidden="true" tabindex="-1"></a>          att_drdid<span class="sc">$</span>ATT),</span>
+<span id="cb10-39"><a href="#cb10-39" aria-hidden="true" tabindex="-1"></a>  <span class="at">SE  =</span> <span class="fu">c</span>(<span class="fu">sqrt</span>(<span class="fu">diag</span>(<span class="fu">vcov</span>(att_ols)))[<span class="st">"D"</span>],</span>
+<span id="cb10-40"><a href="#cb10-40" aria-hidden="true" tabindex="-1"></a>          <span class="fu">sqrt</span>(<span class="fu">diag</span>(<span class="fu">vcov</span>(att_or)))[<span class="st">"D"</span>],</span>
+<span id="cb10-41"><a href="#cb10-41" aria-hidden="true" tabindex="-1"></a>          att_ipw<span class="sc">$</span>se,</span>
+<span id="cb10-42"><a href="#cb10-42" aria-hidden="true" tabindex="-1"></a>          att_drdid<span class="sc">$</span>se)</span>
+<span id="cb10-43"><a href="#cb10-43" aria-hidden="true" tabindex="-1"></a>) <span class="sc">|&gt;</span></span>
+<span id="cb10-44"><a href="#cb10-44" aria-hidden="true" tabindex="-1"></a>  <span class="fu">mutate</span>(</span>
+<span id="cb10-45"><a href="#cb10-45" aria-hidden="true" tabindex="-1"></a>    <span class="at">CI_lo =</span> ATT <span class="sc">-</span> <span class="fl">1.96</span> <span class="sc">*</span> SE,</span>
+<span id="cb10-46"><a href="#cb10-46" aria-hidden="true" tabindex="-1"></a>    <span class="at">CI_hi =</span> ATT <span class="sc">+</span> <span class="fl">1.96</span> <span class="sc">*</span> SE,</span>
+<span id="cb10-47"><a href="#cb10-47" aria-hidden="true" tabindex="-1"></a>    <span class="at">Bias  =</span> ATT <span class="sc">-</span> ATT_true</span>
+<span id="cb10-48"><a href="#cb10-48" aria-hidden="true" tabindex="-1"></a>  )</span>
+<span id="cb10-49"><a href="#cb10-49" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb10-50"><a href="#cb10-50" aria-hidden="true" tabindex="-1"></a>results <span class="sc">|&gt;</span></span>
+<span id="cb10-51"><a href="#cb10-51" aria-hidden="true" tabindex="-1"></a>  <span class="fu">mutate</span>(<span class="fu">across</span>(<span class="fu">c</span>(ATT, SE, CI_lo, CI_hi, Bias), \(x) <span class="fu">round</span>(x, <span class="dv">3</span>))) <span class="sc">|&gt;</span></span>
+<span id="cb10-52"><a href="#cb10-52" aria-hidden="true" tabindex="-1"></a>  knitr<span class="sc">::</span><span class="fu">kable</span>(</span>
+<span id="cb10-53"><a href="#cb10-53" aria-hidden="true" tabindex="-1"></a>    <span class="at">caption =</span> <span class="st">"ATT estimates under four methods. True ATT = 2."</span>,</span>
+<span id="cb10-54"><a href="#cb10-54" aria-hidden="true" tabindex="-1"></a>    <span class="at">col.names =</span> <span class="fu">c</span>(<span class="st">"Estimator"</span>, <span class="st">"ATT"</span>, <span class="st">"SE"</span>, <span class="st">"95% CI lo"</span>, <span class="st">"95% CI hi"</span>, <span class="st">"Bias"</span>)</span>
+<span id="cb10-55"><a href="#cb10-55" aria-hidden="true" tabindex="-1"></a>  )</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="cell-output-display">
+<table class="caption-top table table-sm table-striped small">
+<caption>ATT estimates under four methods. True ATT = 2.</caption>
+<thead>
+<tr class="header">
+<th style="text-align: left;">Estimator</th>
+<th style="text-align: right;">ATT</th>
+<th style="text-align: right;">SE</th>
+<th style="text-align: right;">95% CI lo</th>
+<th style="text-align: right;">95% CI hi</th>
+<th style="text-align: right;">Bias</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td style="text-align: left;">Naive OLS-DiD</td>
+<td style="text-align: right;">2.555</td>
+<td style="text-align: right;">0.083</td>
+<td style="text-align: right;">2.392</td>
+<td style="text-align: right;">2.718</td>
+<td style="text-align: right;">0.555</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">OR-adjusted DiD</td>
+<td style="text-align: right;">1.994</td>
+<td style="text-align: right;">0.075</td>
+<td style="text-align: right;">1.847</td>
+<td style="text-align: right;">2.141</td>
+<td style="text-align: right;">-0.006</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">IPW-DiD (stabilised)</td>
+<td style="text-align: right;">1.996</td>
+<td style="text-align: right;">0.089</td>
+<td style="text-align: right;">1.822</td>
+<td style="text-align: right;">2.170</td>
+<td style="text-align: right;">-0.004</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">DR-DiD</td>
+<td style="text-align: right;">1.982</td>
+<td style="text-align: right;">0.089</td>
+<td style="text-align: right;">1.809</td>
+<td style="text-align: right;">2.156</td>
+<td style="text-align: right;">-0.018</td>
+</tr>
+</tbody>
+</table>
+</div>
+</div>
+<div class="cell">
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb11"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb11-1"><a href="#cb11-1" aria-hidden="true" tabindex="-1"></a>results <span class="sc">|&gt;</span></span>
+<span id="cb11-2"><a href="#cb11-2" aria-hidden="true" tabindex="-1"></a>  <span class="fu">mutate</span>(<span class="at">Estimator =</span> <span class="fu">factor</span>(Estimator, <span class="at">levels =</span> <span class="fu">rev</span>(Estimator))) <span class="sc">|&gt;</span></span>
+<span id="cb11-3"><a href="#cb11-3" aria-hidden="true" tabindex="-1"></a>  <span class="fu">ggplot</span>(<span class="fu">aes</span>(<span class="at">x =</span> ATT, <span class="at">y =</span> Estimator, <span class="at">colour =</span> Estimator)) <span class="sc">+</span></span>
+<span id="cb11-4"><a href="#cb11-4" aria-hidden="true" tabindex="-1"></a>  <span class="fu">geom_vline</span>(<span class="at">xintercept =</span> ATT_true, <span class="at">linetype =</span> <span class="st">"dashed"</span>,</span>
+<span id="cb11-5"><a href="#cb11-5" aria-hidden="true" tabindex="-1"></a>             <span class="at">colour =</span> <span class="st">"grey50"</span>, <span class="at">linewidth =</span> <span class="fl">0.7</span>) <span class="sc">+</span></span>
+<span id="cb11-6"><a href="#cb11-6" aria-hidden="true" tabindex="-1"></a>  <span class="fu">geom_point</span>(<span class="at">size =</span> <span class="dv">3</span>) <span class="sc">+</span></span>
+<span id="cb11-7"><a href="#cb11-7" aria-hidden="true" tabindex="-1"></a>  <span class="fu">geom_errorbarh</span>(<span class="fu">aes</span>(<span class="at">xmin =</span> CI_lo, <span class="at">xmax =</span> CI_hi), <span class="at">height =</span> <span class="fl">0.25</span>) <span class="sc">+</span></span>
+<span id="cb11-8"><a href="#cb11-8" aria-hidden="true" tabindex="-1"></a>  <span class="fu">annotate</span>(<span class="st">"text"</span>, <span class="at">x =</span> ATT_true <span class="sc">+</span> <span class="fl">0.03</span>, <span class="at">y =</span> <span class="fl">0.5</span>,</span>
+<span id="cb11-9"><a href="#cb11-9" aria-hidden="true" tabindex="-1"></a>           <span class="at">label =</span> <span class="st">"True ATT"</span>, <span class="at">hjust =</span> <span class="dv">0</span>, <span class="at">size =</span> <span class="dv">3</span>, <span class="at">colour =</span> <span class="st">"grey45"</span>) <span class="sc">+</span></span>
+<span id="cb11-10"><a href="#cb11-10" aria-hidden="true" tabindex="-1"></a>  <span class="fu">scale_colour_manual</span>(<span class="at">values =</span> <span class="fu">c</span>(</span>
+<span id="cb11-11"><a href="#cb11-11" aria-hidden="true" tabindex="-1"></a>    <span class="st">"Naive OLS-DiD"</span>       <span class="ot">=</span> <span class="st">"#d73027"</span>,</span>
+<span id="cb11-12"><a href="#cb11-12" aria-hidden="true" tabindex="-1"></a>    <span class="st">"OR-adjusted DiD"</span>     <span class="ot">=</span> <span class="st">"#fc8d59"</span>,</span>
+<span id="cb11-13"><a href="#cb11-13" aria-hidden="true" tabindex="-1"></a>    <span class="st">"IPW-DiD (stabilised)"</span><span class="ot">=</span> <span class="st">"#4393c3"</span>,</span>
+<span id="cb11-14"><a href="#cb11-14" aria-hidden="true" tabindex="-1"></a>    <span class="st">"DR-DiD"</span>              <span class="ot">=</span> <span class="st">"#1a6faf"</span></span>
+<span id="cb11-15"><a href="#cb11-15" aria-hidden="true" tabindex="-1"></a>  )) <span class="sc">+</span></span>
+<span id="cb11-16"><a href="#cb11-16" aria-hidden="true" tabindex="-1"></a>  <span class="fu">labs</span>(<span class="at">x =</span> <span class="st">"Estimated ATT"</span>, <span class="at">y =</span> <span class="cn">NULL</span>) <span class="sc">+</span></span>
+<span id="cb11-17"><a href="#cb11-17" aria-hidden="true" tabindex="-1"></a>  <span class="fu">theme_minimal</span>(<span class="at">base_size =</span> <span class="dv">11</span>) <span class="sc">+</span></span>
+<span id="cb11-18"><a href="#cb11-18" aria-hidden="true" tabindex="-1"></a>  <span class="fu">theme</span>(<span class="at">legend.position =</span> <span class="st">"none"</span>, <span class="at">panel.grid.minor =</span> <span class="fu">element_blank</span>())</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="cell-output-display">
+<div id="fig-att-comparison" class="quarto-float quarto-figure quarto-figure-center anchored">
+<figure class="quarto-float quarto-float-fig figure">
+<div aria-describedby="fig-att-comparison-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
+<img src="chapter3_files/figure-html/fig-att-comparison-1.png" class="img-fluid figure-img" width="624">
+</div>
+<figcaption class="quarto-float-caption-bottom quarto-float-caption quarto-float-fig" id="fig-att-comparison-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
+Figure&nbsp;3.3: ATT estimates and 95% confidence intervals for the four estimators. The dashed line marks the true ATT = 2. Naive OLS-DiD is biased upward due to compositional differences in age and income; OR, IPW, and DR-DiD all recover estimates close to the truth.
+</figcaption>
+</figure>
+</div>
+</div>
+</div>
+<p>The naive OLS-DiD substantially overstates the ATT because older, higher-income units sort into treatment and also happen to have faster-growing counterfactual outcomes. The OR-adjusted estimator and the IPW-DiD both remove this bias by controlling for or reweighting by covariates. The DR-DiD produces the smallest bias and narrowest confidence interval, reflecting its efficiency advantage when both working models are approximately correct.</p>
+</section>
+<section id="sensitivity-misspecifying-one-model" class="level3 unnumbered">
+<h3 class="unnumbered anchored" data-anchor-id="sensitivity-misspecifying-one-model">Sensitivity: Misspecifying One Model</h3>
+<p>To illustrate the double-robustness property in finite samples, we deliberately misspecify the propensity-score model (using only <code>age_s</code>, omitting <code>income_s</code>) while keeping the outcome regression correctly specified, and vice versa.</p>
+<div class="cell">
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb12"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb12-1"><a href="#cb12-1" aria-hidden="true" tabindex="-1"></a>att_dr_psw <span class="ot">&lt;-</span> <span class="fu">drdid</span>(</span>
+<span id="cb12-2"><a href="#cb12-2" aria-hidden="true" tabindex="-1"></a>  <span class="at">yname =</span> <span class="st">"Y"</span>, <span class="at">tname =</span> <span class="st">"year"</span>, <span class="at">idname =</span> <span class="st">"id"</span>, <span class="at">dname =</span> <span class="st">"D"</span>,</span>
+<span id="cb12-3"><a href="#cb12-3" aria-hidden="true" tabindex="-1"></a>  <span class="at">xformla =</span> <span class="sc">~</span> age_s,</span>
+<span id="cb12-4"><a href="#cb12-4" aria-hidden="true" tabindex="-1"></a>  <span class="at">data =</span> df_long</span>
+<span id="cb12-5"><a href="#cb12-5" aria-hidden="true" tabindex="-1"></a>)</span>
+<span id="cb12-6"><a href="#cb12-6" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb12-7"><a href="#cb12-7" aria-hidden="true" tabindex="-1"></a>att_dr_orw <span class="ot">&lt;-</span> <span class="fu">drdid</span>(</span>
+<span id="cb12-8"><a href="#cb12-8" aria-hidden="true" tabindex="-1"></a>  <span class="at">yname =</span> <span class="st">"Y"</span>, <span class="at">tname =</span> <span class="st">"year"</span>, <span class="at">idname =</span> <span class="st">"id"</span>, <span class="at">dname =</span> <span class="st">"D"</span>,</span>
+<span id="cb12-9"><a href="#cb12-9" aria-hidden="true" tabindex="-1"></a>  <span class="at">xformla =</span> <span class="sc">~</span> income_s,</span>
+<span id="cb12-10"><a href="#cb12-10" aria-hidden="true" tabindex="-1"></a>  <span class="at">data =</span> df_long</span>
+<span id="cb12-11"><a href="#cb12-11" aria-hidden="true" tabindex="-1"></a>)</span>
+<span id="cb12-12"><a href="#cb12-12" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb12-13"><a href="#cb12-13" aria-hidden="true" tabindex="-1"></a>att_ipw_psw <span class="ot">&lt;-</span> <span class="fu">ipwdid</span>(</span>
+<span id="cb12-14"><a href="#cb12-14" aria-hidden="true" tabindex="-1"></a>  <span class="at">yname =</span> <span class="st">"Y"</span>, <span class="at">tname =</span> <span class="st">"year"</span>, <span class="at">idname =</span> <span class="st">"id"</span>, <span class="at">dname =</span> <span class="st">"D"</span>,</span>
+<span id="cb12-15"><a href="#cb12-15" aria-hidden="true" tabindex="-1"></a>  <span class="at">xformla =</span> <span class="sc">~</span> age_s,</span>
+<span id="cb12-16"><a href="#cb12-16" aria-hidden="true" tabindex="-1"></a>  <span class="at">data =</span> df_long</span>
+<span id="cb12-17"><a href="#cb12-17" aria-hidden="true" tabindex="-1"></a>)</span>
+<span id="cb12-18"><a href="#cb12-18" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb12-19"><a href="#cb12-19" aria-hidden="true" tabindex="-1"></a><span class="fu">tibble</span>(</span>
+<span id="cb12-20"><a href="#cb12-20" aria-hidden="true" tabindex="-1"></a>  <span class="at">Specification =</span> <span class="fu">c</span>(</span>
+<span id="cb12-21"><a href="#cb12-21" aria-hidden="true" tabindex="-1"></a>    <span class="st">"DR-DiD: both correct"</span>,</span>
+<span id="cb12-22"><a href="#cb12-22" aria-hidden="true" tabindex="-1"></a>    <span class="st">"DR-DiD: PS misspecified"</span>,</span>
+<span id="cb12-23"><a href="#cb12-23" aria-hidden="true" tabindex="-1"></a>    <span class="st">"DR-DiD: OR misspecified"</span>,</span>
+<span id="cb12-24"><a href="#cb12-24" aria-hidden="true" tabindex="-1"></a>    <span class="st">"IPW: PS misspecified (no DR)"</span></span>
+<span id="cb12-25"><a href="#cb12-25" aria-hidden="true" tabindex="-1"></a>  ),</span>
+<span id="cb12-26"><a href="#cb12-26" aria-hidden="true" tabindex="-1"></a>  <span class="at">ATT  =</span> <span class="fu">c</span>(att_drdid<span class="sc">$</span>ATT, att_dr_psw<span class="sc">$</span>ATT,</span>
+<span id="cb12-27"><a href="#cb12-27" aria-hidden="true" tabindex="-1"></a>           att_dr_orw<span class="sc">$</span>ATT, att_ipw_psw<span class="sc">$</span>ATT),</span>
+<span id="cb12-28"><a href="#cb12-28" aria-hidden="true" tabindex="-1"></a>  <span class="at">SE   =</span> <span class="fu">c</span>(att_drdid<span class="sc">$</span>se,  att_dr_psw<span class="sc">$</span>se,</span>
+<span id="cb12-29"><a href="#cb12-29" aria-hidden="true" tabindex="-1"></a>           att_dr_orw<span class="sc">$</span>se,  att_ipw_psw<span class="sc">$</span>se),</span>
+<span id="cb12-30"><a href="#cb12-30" aria-hidden="true" tabindex="-1"></a>  <span class="at">Bias =</span> <span class="fu">c</span>(att_drdid<span class="sc">$</span>ATT, att_dr_psw<span class="sc">$</span>ATT,</span>
+<span id="cb12-31"><a href="#cb12-31" aria-hidden="true" tabindex="-1"></a>           att_dr_orw<span class="sc">$</span>ATT, att_ipw_psw<span class="sc">$</span>ATT) <span class="sc">-</span> ATT_true</span>
+<span id="cb12-32"><a href="#cb12-32" aria-hidden="true" tabindex="-1"></a>) <span class="sc">|&gt;</span></span>
+<span id="cb12-33"><a href="#cb12-33" aria-hidden="true" tabindex="-1"></a>  <span class="fu">mutate</span>(<span class="fu">across</span>(<span class="fu">c</span>(ATT, SE, Bias), \(x) <span class="fu">round</span>(x, <span class="dv">3</span>))) <span class="sc">|&gt;</span></span>
+<span id="cb12-34"><a href="#cb12-34" aria-hidden="true" tabindex="-1"></a>  knitr<span class="sc">::</span><span class="fu">kable</span>(</span>
+<span id="cb12-35"><a href="#cb12-35" aria-hidden="true" tabindex="-1"></a>    <span class="at">caption =</span> <span class="fu">paste0</span>(</span>
+<span id="cb12-36"><a href="#cb12-36" aria-hidden="true" tabindex="-1"></a>      <span class="st">"Sensitivity of ATT estimates to model misspecification. True ATT = "</span>,</span>
+<span id="cb12-37"><a href="#cb12-37" aria-hidden="true" tabindex="-1"></a>      ATT_true, <span class="st">". DR-DiD remains close to the truth when one model is "</span>,</span>
+<span id="cb12-38"><a href="#cb12-38" aria-hidden="true" tabindex="-1"></a>      <span class="st">"misspecified; plain IPW-DiD fails when its only model is wrong."</span></span>
+<span id="cb12-39"><a href="#cb12-39" aria-hidden="true" tabindex="-1"></a>    )</span>
+<span id="cb12-40"><a href="#cb12-40" aria-hidden="true" tabindex="-1"></a>  )</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="cell-output-display">
+<table class="caption-top table table-sm table-striped small">
+<caption>Sensitivity of ATT estimates to model misspecification. True ATT = 2. DR-DiD remains close to the truth when one model is misspecified; plain IPW-DiD fails when its only model is wrong.</caption>
+<thead>
+<tr class="header">
+<th style="text-align: left;">Specification</th>
+<th style="text-align: right;">ATT</th>
+<th style="text-align: right;">SE</th>
+<th style="text-align: right;">Bias</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td style="text-align: left;">DR-DiD: both correct</td>
+<td style="text-align: right;">1.982</td>
+<td style="text-align: right;">0.089</td>
+<td style="text-align: right;">-0.018</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">DR-DiD: PS misspecified</td>
+<td style="text-align: right;">2.028</td>
+<td style="text-align: right;">0.086</td>
+<td style="text-align: right;">0.028</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">DR-DiD: OR misspecified</td>
+<td style="text-align: right;">2.270</td>
+<td style="text-align: right;">0.086</td>
+<td style="text-align: right;">0.270</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">IPW: PS misspecified (no DR)</td>
+<td style="text-align: right;">2.041</td>
+<td style="text-align: right;">0.088</td>
+<td style="text-align: right;">0.041</td>
+</tr>
+</tbody>
+</table>
+</div>
+</div>
+<p>The results confirm the theory. When the propensity-score model is misspecified (omitting <code>income_s</code>) but the outcome regression is correct, DR-DiD still delivers a near-unbiased estimate because robustness clause (b) of Proposition 3.2 applies. When the outcome regression is misspecified but the propensity score is correct, clause (a) applies and the DR-DiD estimate remains accurate. By contrast, plain IPW-DiD with a misspecified propensity score has no backstop and delivers a biased estimate similar to the naive OLS-DiD.</p>
+<hr>
+</section>
+</section>
+<section id="sec-ch3-summary" class="level2" data-number="3.5">
+<h2 data-number="3.5" class="anchored" data-anchor-id="sec-ch3-summary"><span class="header-section-number">3.5</span> Summary</h2>
+<p>This chapter has shown that when treatment groups differ on pre-treatment covariates that drive differential outcome trends, the unconditional PTA fails through a simple composition mechanism captured by equation (3.2). Conditioning on those covariates via the conditional PTA (3.3) restores identification, provided the overlap assumption (3.4) holds. Two estimators operationalise this strategy:</p>
+<p><strong>IPW-DiD</strong> (<span class="citation" data-cites="abadie2005">Abadie (<a href="references.html#ref-abadie2005" role="doc-biblioref">2005</a>)</span>) reweights the control group’s outcome changes by the odds of treatment <span class="math inline">\(\hat p(\mathbf{X}_i)/(1-\hat p(\mathbf{X}_i))\)</span>, constructing a covariate-balanced comparison group without parametric assumptions on the outcome. The Horvitz–Thompson form (3.11) is unbiased under correct propensity-score specification; the stabilised form (3.12) is preferable in practice for its reduced variance; the trimmed form (3.15) handles near-violations of overlap by restricting inference to the common support.</p>
+<p><strong>DR-DiD</strong> (<span class="citation" data-cites="santanna2020">Sant’Anna &amp; Zhao (<a href="references.html#ref-santanna2020" role="doc-biblioref">2020</a>)</span>) combines a propensity-score model and an outcome-regression model in the estimand (3.16). The double-robustness property — proved in Proposition 3.2 — guarantees consistency if either model is correct, providing insurance against the inevitable modelling approximations of empirical work. Under correct specification of both models, DR-DiD achieves the semiparametric efficiency bound.</p>
+<p>The empirical illustration in Section <a href="#sec-ipwdr-empirics" class="quarto-xref"><span>Section 3.4</span></a> confirms these properties in finite samples: naive OLS-DiD is substantially biased when covariate compositions differ; IPW-DiD and DR-DiD remove this bias; and DR-DiD remains accurate even when one model is deliberately misspecified, while plain IPW does not. Together, these estimators form the workhorse toolkit for covariate-adjusted DiD in settings with a single pre-period and a single post-period. Part IV extends this machinery to staggered treatment timing, where additional heterogeneity across cohorts must be addressed <span class="citation" data-cites="callaway2021">(<a href="references.html#ref-callaway2021" role="doc-biblioref">Callaway &amp; Sant’Anna, 2021</a>)</span>.</p>
+
+
+<div id="refs" class="references csl-bib-body hanging-indent" data-entry-spacing="0" data-line-spacing="2" role="list" style="display: none">
+<div id="ref-abadie2005" class="csl-entry" role="listitem">
+Abadie, A. (2005). Semiparametric difference-in-differences estimators. <em>Review of Economic Studies</em>, <em>72</em>(1), 1–19. <a href="https://doi.org/10.1111/0034-6527.00321">https://doi.org/10.1111/0034-6527.00321</a>.
+</div>
+<div id="ref-callaway2021" class="csl-entry" role="listitem">
+Callaway, B., &amp; Sant’Anna, P. H. C. (2021). Difference-in-differences with multiple time periods. <em>Journal of Econometrics</em>, <em>225</em>(2), 200–230. <a href="https://doi.org/10.1016/j.jeconom.2020.12.001">https://doi.org/10.1016/j.jeconom.2020.12.001</a>.
+</div>
+<div id="ref-crump2009" class="csl-entry" role="listitem">
+Crump, R. K., Hotz, V. J., Imbens, G. W., &amp; Mitnik, O. A. (2009). Dealing with limited overlap in estimation of average treatment effects. <em>Biometrika</em>, <em>96</em>(1), 187–199. <a href="https://doi.org/10.1093/biomet/asn055">https://doi.org/10.1093/biomet/asn055</a>.
+</div>
+<div id="ref-hahn1998" class="csl-entry" role="listitem">
+Hahn, J. (1998). On the role of the propensity score in efficient semiparametric estimation of average treatment effects. <em>Econometrica</em>, <em>66</em>(2), 315–331. <a href="https://doi.org/10.2307/2998560">https://doi.org/10.2307/2998560</a>.
+</div>
+<div id="ref-heckman1997" class="csl-entry" role="listitem">
+Heckman, J. J., Ichimura, H., &amp; Todd, P. E. (1997). Matching as an econometric evaluation estimator: Evidence from evaluating a job training programme. <em>Review of Economic Studies</em>, <em>64</em>(4), 605–654. <a href="https://doi.org/10.2307/2971733">https://doi.org/10.2307/2971733</a>.
+</div>
+<div id="ref-heckman1998" class="csl-entry" role="listitem">
+Heckman, J. J., Ichimura, H., &amp; Todd, P. E. (1998). Matching as an econometric evaluation estimator. <em>Review of Economic Studies</em>, <em>65</em>(2), 261–294. <a href="https://doi.org/10.1111/1467-937X.00044">https://doi.org/10.1111/1467-937X.00044</a>.
+</div>
+<div id="ref-hirano2003" class="csl-entry" role="listitem">
+Hirano, K., Imbens, G. W., &amp; Ridder, G. (2003). Efficient estimation of average treatment effects using the estimated propensity score. <em>Econometrica</em>, <em>71</em>(4), 1161–1189. <a href="https://doi.org/10.1111/1468-0262.00442">https://doi.org/10.1111/1468-0262.00442</a>.
+</div>
+<div id="ref-robins1995" class="csl-entry" role="listitem">
+Robins, J. M., &amp; Rotnitzky, A. (1995). Semiparametric efficiency in multivariate regression models with missing data. <em>Journal of the American Statistical Association</em>, <em>90</em>(429), 122–129. <a href="https://doi.org/10.1080/01621459.1995.10476494">https://doi.org/10.1080/01621459.1995.10476494</a>.
+</div>
+<div id="ref-robins1994" class="csl-entry" role="listitem">
+Robins, J. M., Rotnitzky, A., &amp; Zhao, L. P. (1994). Estimation of regression coefficients when some regressors are not always observed. <em>Journal of the American Statistical Association</em>, <em>89</em>(427), 846–866. <a href="https://doi.org/10.1080/01621459.1994.10476818">https://doi.org/10.1080/01621459.1994.10476818</a>.
+</div>
+<div id="ref-rosenbaum1983" class="csl-entry" role="listitem">
+Rosenbaum, P. R., &amp; Rubin, D. B. (1983). The central role of the propensity score in observational studies for causal effects. <em>Biometrika</em>, <em>70</em>(1), 41–55. <a href="https://doi.org/10.1093/biomet/70.1.41">https://doi.org/10.1093/biomet/70.1.41</a>.
+</div>
+<div id="ref-santanna2020" class="csl-entry" role="listitem">
+Sant’Anna, P. H. C., &amp; Zhao, J. (2020). Doubly robust difference-in-differences estimators. <em>Journal of Econometrics</em>, <em>219</em>(1), 101–122. <a href="https://doi.org/10.1016/j.jeconom.2020.06.003">https://doi.org/10.1016/j.jeconom.2020.06.003</a>.
+</div>
+</div>
+</section>
+
+</main> <!-- /main -->
+<script id="quarto-html-after-body" type="application/javascript">
+  window.document.addEventListener("DOMContentLoaded", function (event) {
+    const icon = "";
+    const anchorJS = new window.AnchorJS();
+    anchorJS.options = {
+      placement: 'right',
+      icon: icon
+    };
+    anchorJS.add('.anchored');
+    const isCodeAnnotation = (el) => {
+      for (const clz of el.classList) {
+        if (clz.startsWith('code-annotation-')) {                     
+          return true;
+        }
+      }
+      return false;
+    }
+    const onCopySuccess = function(e) {
+      // button target
+      const button = e.trigger;
+      // don't keep focus
+      button.blur();
+      // flash "checked"
+      button.classList.add('code-copy-button-checked');
+      var currentTitle = button.getAttribute("title");
+      button.setAttribute("title", "Copied!");
+      let tooltip;
+      if (window.bootstrap) {
+        button.setAttribute("data-bs-toggle", "tooltip");
+        button.setAttribute("data-bs-placement", "left");
+        button.setAttribute("data-bs-title", "Copied!");
+        tooltip = new bootstrap.Tooltip(button, 
+          { trigger: "manual", 
+            customClass: "code-copy-button-tooltip",
+            offset: [0, -8]});
+        tooltip.show();    
+      }
+      setTimeout(function() {
+        if (tooltip) {
+          tooltip.hide();
+          button.removeAttribute("data-bs-title");
+          button.removeAttribute("data-bs-toggle");
+          button.removeAttribute("data-bs-placement");
+        }
+        button.setAttribute("title", currentTitle);
+        button.classList.remove('code-copy-button-checked');
+      }, 1000);
+      // clear code selection
+      e.clearSelection();
+    }
+    const getTextToCopy = function(trigger) {
+      const outerScaffold = trigger.parentElement.cloneNode(true);
+      const codeEl = outerScaffold.querySelector('code');
+      for (const childEl of codeEl.children) {
+        if (isCodeAnnotation(childEl)) {
+          childEl.remove();
+        }
+      }
+      return codeEl.innerText;
+    }
+    const clipboard = new window.ClipboardJS('.code-copy-button:not([data-in-quarto-modal])', {
+      text: getTextToCopy
+    });
+    clipboard.on('success', onCopySuccess);
+    if (window.document.getElementById('quarto-embedded-source-code-modal')) {
+      const clipboardModal = new window.ClipboardJS('.code-copy-button[data-in-quarto-modal]', {
+        text: getTextToCopy,
+        container: window.document.getElementById('quarto-embedded-source-code-modal')
+      });
+      clipboardModal.on('success', onCopySuccess);
+    }
+      var localhostRegex = new RegExp(/^(?:http|https):\/\/localhost\:?[0-9]*\//);
+      var mailtoRegex = new RegExp(/^mailto:/);
+        var filterRegex = new RegExp('/' + window.location.host + '/');
+      var isInternal = (href) => {
+          return filterRegex.test(href) || localhostRegex.test(href) || mailtoRegex.test(href);
+      }
+      // Inspect non-navigation links and adorn them if external
+     var links = window.document.querySelectorAll('a[href]:not(.nav-link):not(.navbar-brand):not(.toc-action):not(.sidebar-link):not(.sidebar-item-toggle):not(.pagination-link):not(.no-external):not([aria-hidden]):not(.dropdown-item):not(.quarto-navigation-tool):not(.about-link)');
+      for (var i=0; i<links.length; i++) {
+        const link = links[i];
+        if (!isInternal(link.href)) {
+          // undo the damage that might have been done by quarto-nav.js in the case of
+          // links that we want to consider external
+          if (link.dataset.originalHref !== undefined) {
+            link.href = link.dataset.originalHref;
+          }
+        }
+      }
+    function tippyHover(el, contentFn, onTriggerFn, onUntriggerFn) {
+      const config = {
+        allowHTML: true,
+        maxWidth: 500,
+        delay: 100,
+        arrow: false,
+        appendTo: function(el) {
+            return el.parentElement;
+        },
+        interactive: true,
+        interactiveBorder: 10,
+        theme: 'quarto',
+        placement: 'bottom-start',
+      };
+      if (contentFn) {
+        config.content = contentFn;
+      }
+      if (onTriggerFn) {
+        config.onTrigger = onTriggerFn;
+      }
+      if (onUntriggerFn) {
+        config.onUntrigger = onUntriggerFn;
+      }
+      window.tippy(el, config); 
+    }
+    const noterefs = window.document.querySelectorAll('a[role="doc-noteref"]');
+    for (var i=0; i<noterefs.length; i++) {
+      const ref = noterefs[i];
+      tippyHover(ref, function() {
+        // use id or data attribute instead here
+        let href = ref.getAttribute('data-footnote-href') || ref.getAttribute('href');
+        try { href = new URL(href).hash; } catch {}
+        const id = href.replace(/^#\/?/, "");
+        const note = window.document.getElementById(id);
+        if (note) {
+          return note.innerHTML;
+        } else {
+          return "";
+        }
+      });
+    }
+    const xrefs = window.document.querySelectorAll('a.quarto-xref');
+    const processXRef = (id, note) => {
+      // Strip column container classes
+      const stripColumnClz = (el) => {
+        el.classList.remove("page-full", "page-columns");
+        if (el.children) {
+          for (const child of el.children) {
+            stripColumnClz(child);
+          }
+        }
+      }
+      stripColumnClz(note)
+      if (id === null || id.startsWith('sec-')) {
+        // Special case sections, only their first couple elements
+        const container = document.createElement("div");
+        if (note.children && note.children.length > 2) {
+          container.appendChild(note.children[0].cloneNode(true));
+          for (let i = 1; i < note.children.length; i++) {
+            const child = note.children[i];
+            if (child.tagName === "P" && child.innerText === "") {
+              continue;
+            } else {
+              container.appendChild(child.cloneNode(true));
+              break;
+            }
+          }
+          if (window.Quarto?.typesetMath) {
+            window.Quarto.typesetMath(container);
+          }
+          return container.innerHTML
+        } else {
+          if (window.Quarto?.typesetMath) {
+            window.Quarto.typesetMath(note);
+          }
+          return note.innerHTML;
+        }
+      } else {
+        // Remove any anchor links if they are present
+        const anchorLink = note.querySelector('a.anchorjs-link');
+        if (anchorLink) {
+          anchorLink.remove();
+        }
+        if (window.Quarto?.typesetMath) {
+          window.Quarto.typesetMath(note);
+        }
+        if (note.classList.contains("callout")) {
+          return note.outerHTML;
+        } else {
+          return note.innerHTML;
+        }
+      }
+    }
+    for (var i=0; i<xrefs.length; i++) {
+      const xref = xrefs[i];
+      tippyHover(xref, undefined, function(instance) {
+        instance.disable();
+        let url = xref.getAttribute('href');
+        let hash = undefined; 
+        if (url.startsWith('#')) {
+          hash = url;
+        } else {
+          try { hash = new URL(url).hash; } catch {}
+        }
+        if (hash) {
+          const id = hash.replace(/^#\/?/, "");
+          const note = window.document.getElementById(id);
+          if (note !== null) {
+            try {
+              const html = processXRef(id, note.cloneNode(true));
+              instance.setContent(html);
+            } finally {
+              instance.enable();
+              instance.show();
+            }
+          } else {
+            // See if we can fetch this
+            fetch(url.split('#')[0])
+            .then(res => res.text())
+            .then(html => {
+              const parser = new DOMParser();
+              const htmlDoc = parser.parseFromString(html, "text/html");
+              const note = htmlDoc.getElementById(id);
+              if (note !== null) {
+                const html = processXRef(id, note);
+                instance.setContent(html);
+              } 
+            }).finally(() => {
+              instance.enable();
+              instance.show();
+            });
+          }
+        } else {
+          // See if we can fetch a full url (with no hash to target)
+          // This is a special case and we should probably do some content thinning / targeting
+          fetch(url)
+          .then(res => res.text())
+          .then(html => {
+            const parser = new DOMParser();
+            const htmlDoc = parser.parseFromString(html, "text/html");
+            const note = htmlDoc.querySelector('main.content');
+            if (note !== null) {
+              // This should only happen for chapter cross references
+              // (since there is no id in the URL)
+              // remove the first header
+              if (note.children.length > 0 && note.children[0].tagName === "HEADER") {
+                note.children[0].remove();
+              }
+              const html = processXRef(null, note);
+              instance.setContent(html);
+            } 
+          }).finally(() => {
+            instance.enable();
+            instance.show();
+          });
+        }
+      }, function(instance) {
+      });
+    }
+        let selectedAnnoteEl;
+        const selectorForAnnotation = ( cell, annotation) => {
+          let cellAttr = 'data-code-cell="' + cell + '"';
+          let lineAttr = 'data-code-annotation="' +  annotation + '"';
+          const selector = 'span[' + cellAttr + '][' + lineAttr + ']';
+          return selector;
+        }
+        const selectCodeLines = (annoteEl) => {
+          const doc = window.document;
+          const targetCell = annoteEl.getAttribute("data-target-cell");
+          const targetAnnotation = annoteEl.getAttribute("data-target-annotation");
+          const annoteSpan = window.document.querySelector(selectorForAnnotation(targetCell, targetAnnotation));
+          const lines = annoteSpan.getAttribute("data-code-lines").split(",");
+          const lineIds = lines.map((line) => {
+            return targetCell + "-" + line;
+          })
+          let top = null;
+          let height = null;
+          let parent = null;
+          if (lineIds.length > 0) {
+              //compute the position of the single el (top and bottom and make a div)
+              const el = window.document.getElementById(lineIds[0]);
+              top = el.offsetTop;
+              height = el.offsetHeight;
+              parent = el.parentElement.parentElement;
+            if (lineIds.length > 1) {
+              const lastEl = window.document.getElementById(lineIds[lineIds.length - 1]);
+              const bottom = lastEl.offsetTop + lastEl.offsetHeight;
+              height = bottom - top;
+            }
+            if (top !== null && height !== null && parent !== null) {
+              // cook up a div (if necessary) and position it 
+              let div = window.document.getElementById("code-annotation-line-highlight");
+              if (div === null) {
+                div = window.document.createElement("div");
+                div.setAttribute("id", "code-annotation-line-highlight");
+                div.style.position = 'absolute';
+                parent.appendChild(div);
+              }
+              div.style.top = top - 2 + "px";
+              div.style.height = height + 4 + "px";
+              div.style.left = 0;
+              let gutterDiv = window.document.getElementById("code-annotation-line-highlight-gutter");
+              if (gutterDiv === null) {
+                gutterDiv = window.document.createElement("div");
+                gutterDiv.setAttribute("id", "code-annotation-line-highlight-gutter");
+                gutterDiv.style.position = 'absolute';
+                const codeCell = window.document.getElementById(targetCell);
+                const gutter = codeCell.querySelector('.code-annotation-gutter');
+                gutter.appendChild(gutterDiv);
+              }
+              gutterDiv.style.top = top - 2 + "px";
+              gutterDiv.style.height = height + 4 + "px";
+            }
+            selectedAnnoteEl = annoteEl;
+          }
+        };
+        const unselectCodeLines = () => {
+          const elementsIds = ["code-annotation-line-highlight", "code-annotation-line-highlight-gutter"];
+          elementsIds.forEach((elId) => {
+            const div = window.document.getElementById(elId);
+            if (div) {
+              div.remove();
+            }
+          });
+          selectedAnnoteEl = undefined;
+        };
+          // Handle positioning of the toggle
+      window.addEventListener(
+        "resize",
+        throttle(() => {
+          elRect = undefined;
+          if (selectedAnnoteEl) {
+            selectCodeLines(selectedAnnoteEl);
+          }
+        }, 10)
+      );
+      function throttle(fn, ms) {
+      let throttle = false;
+      let timer;
+        return (...args) => {
+          if(!throttle) { // first call gets through
+              fn.apply(this, args);
+              throttle = true;
+          } else { // all the others get throttled
+              if(timer) clearTimeout(timer); // cancel #2
+              timer = setTimeout(() => {
+                fn.apply(this, args);
+                timer = throttle = false;
+              }, ms);
+          }
+        };
+      }
+        // Attach click handler to the DT
+        const annoteDls = window.document.querySelectorAll('dt[data-target-cell]');
+        for (const annoteDlNode of annoteDls) {
+          annoteDlNode.addEventListener('click', (event) => {
+            const clickedEl = event.target;
+            if (clickedEl !== selectedAnnoteEl) {
+              unselectCodeLines();
+              const activeEl = window.document.querySelector('dt[data-target-cell].code-annotation-active');
+              if (activeEl) {
+                activeEl.classList.remove('code-annotation-active');
+              }
+              selectCodeLines(clickedEl);
+              clickedEl.classList.add('code-annotation-active');
+            } else {
+              // Unselect the line
+              unselectCodeLines();
+              clickedEl.classList.remove('code-annotation-active');
+            }
+          });
+        }
+    const findCites = (el) => {
+      const parentEl = el.parentElement;
+      if (parentEl) {
+        const cites = parentEl.dataset.cites;
+        if (cites) {
+          return {
+            el,
+            cites: cites.split(' ')
+          };
+        } else {
+          return findCites(el.parentElement)
+        }
+      } else {
+        return undefined;
+      }
+    };
+    var bibliorefs = window.document.querySelectorAll('a[role="doc-biblioref"]');
+    for (var i=0; i<bibliorefs.length; i++) {
+      const ref = bibliorefs[i];
+      const citeInfo = findCites(ref);
+      if (citeInfo) {
+        tippyHover(citeInfo.el, function() {
+          var popup = window.document.createElement('div');
+          citeInfo.cites.forEach(function(cite) {
+            var citeDiv = window.document.createElement('div');
+            citeDiv.classList.add('hanging-indent');
+            citeDiv.classList.add('csl-entry');
+            var biblioDiv = window.document.getElementById('ref-' + cite);
+            if (biblioDiv) {
+              citeDiv.innerHTML = biblioDiv.innerHTML;
+            }
+            popup.appendChild(citeDiv);
+          });
+          return popup.innerHTML;
+        });
+      }
+    }
+  });
+  </script>
+<nav class="page-navigation">
+  <div class="nav-page nav-page-previous">
+      <a href="./chapter2.html" class="pagination-link" aria-label="Identification: Assumptions, Violations, and Tests">
+        <i class="bi bi-arrow-left-short"></i> <span class="nav-page-text"><span class="chapter-number">2</span>&nbsp; <span class="chapter-title">Identification: Assumptions, Violations, and Tests</span></span>
+      </a>          
+  </div>
+  <div class="nav-page nav-page-next">
+      <a href="./references.html" class="pagination-link" aria-label="References">
+        <span class="nav-page-text">References</span> <i class="bi bi-arrow-right-short"></i>
+      </a>
+  </div>
+</nav>
+</div> <!-- /content -->
+
+
+
+
+</body></html>

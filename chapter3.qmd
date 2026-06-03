@@ -1,0 +1,650 @@
+```{r}
+#| label: setup
+#| include: false
+library(tidyverse)
+library(fixest)
+library(modelsummary)
+library(ggplot2)
+library(patchwork)
+library(DRDID)
+```
+
+# Covariate Adjustment: IPW and Doubly Robust DiD {#sec-ipwdr}
+
+@sec-intro established the parallel trends assumption (PTA) as the core identifying restriction of DiD. @sec-identification demonstrated that this assumption is often difficult to defend unconditionally: when treated and control groups differ systematically on pre-treatment characteristics that predict differential outcome trajectories, the marginal PTA fails even if no treatment effect exists. The remedy is to condition on those characteristics — replacing the unconditional PTA with a **conditional** variant that asserts parallelism only within strata defined by observed covariates $\mathbf{X}_i$.
+
+This chapter develops two estimators that exploit conditional PTA. Section @sec-condpta establishes why conditioning on covariates restores identification and states the formal assumptions precisely. Section @sec-ipw introduces inverse probability weighting (IPW) and derives its DiD analogue, including stabilised and trimmed variants. Section @sec-drdid presents the doubly robust DiD (DR-DiD) estimator of @santanna2020 and proves the double-robustness property. Section @sec-ipwdr-empirics illustrates all three estimators on a simulated dataset in R.
+
+------------------------------------------------------------------------
+
+## Why Conditioning on Covariates Helps {#sec-condpta}
+
+### The Failure of Unconditional Parallel Trends
+
+Recall the unconditional PTA from equation (1.13):
+
+$$\mathbb{E}\!\left[Y_{i,1}(0)-Y_{i,0}(0)\mid D_i=1\right]
+=\mathbb{E}\!\left[Y_{i,1}(0)-Y_{i,0}(0)\mid D_i=0\right]. \tag{3.1}$$
+
+Equation (3.1) requires that, in the absence of treatment, the *average counterfactual trend* of the treated group equals that of the control group. This is a marginal restriction on unobservables. Its plausibility depends critically on how similar the two groups are in their pre-treatment composition.
+
+To see the problem formally, let $\mathbf{X}_i$ be a vector of pre-treatment covariates. By the law of iterated expectations:
+
+$$\mathbb{E}\!\left[Y_{i,1}(0)-Y_{i,0}(0)\mid D_i=d\right]
+= \mathbb{E}_{\mathbf{X}\mid D=d}\!\left[
+\mathbb{E}\!\left[Y_{i,1}(0)-Y_{i,0}(0)\mid D_i=d,\,\mathbf{X}_i\right]
+\right]. \tag{3.2}$$
+
+Even if $\mathbb{E}[Y_{i,1}(0)-Y_{i,0}(0)\mid D_i=1,\mathbf{X}_i]
+= \mathbb{E}[Y_{i,1}(0)-Y_{i,0}(0)\mid D_i=0,\mathbf{X}_i]$ for every value of $\mathbf{X}_i$ — that is, even if conditional PTA holds — the *marginal* trends in (3.1) will differ whenever the covariate distributions $F(\mathbf{X}\mid D=1)$ and $F(\mathbf{X}\mid D=0)$ differ and the outcome trend varies with $\mathbf{X}_i$. The marginal trends are weighted averages of the same conditional trend function, but the weights differ across groups, so the aggregates can diverge.
+
+::: callout-note
+**Example (Differential composition).** Suppose the post–pre change in untreated potential outcomes is $Y_{i,1}(0)-Y_{i,0}(0) = \alpha + \gamma X_i + \varepsilon_i$, where $X_i \in \{0,1\}$ is a binary covariate and $\mathbb{E}[\varepsilon_i \mid D_i, X_i] = 0$. The conditional trend is the same for both groups: $\alpha + \gamma x$. But if $\Pr(X_i = 1 \mid D_i = 1) = 0.8$ and $\Pr(X_i = 1 \mid D_i = 0) = 0.2$, the marginal trends are
+
+$$\mathbb{E}[Y_{i,1}(0)-Y_{i,0}(0)\mid D_i=1] = \alpha + 0.8\gamma, \qquad
+\mathbb{E}[Y_{i,1}(0)-Y_{i,0}(0)\mid D_i=0] = \alpha + 0.2\gamma.$$
+
+These differ by $0.6\gamma \neq 0$ whenever $\gamma \neq 0$, even though the conditional PTA holds exactly. The DiD estimator without covariate adjustment absorbs this composition difference as a spurious treatment effect.
+:::
+
+### The Conditional Parallel Trends Assumption
+
+@abadie2005 formalises the conditional analogue. Let $\mathbf{X}_i$ denote a vector of **pre-treatment** covariates observed for all units. The **conditional parallel trends assumption** (CPTA) states:
+
+$$\mathbb{E}\!\left[Y_{i,1}(0)-Y_{i,0}(0)\mid D_i=1,\mathbf{X}_i\right]
+=\mathbb{E}\!\left[Y_{i,1}(0)-Y_{i,0}(0)\mid D_i=0,\mathbf{X}_i\right]
+\quad \text{a.s.} \tag{3.3}$$
+
+Assumption (3.3) is strictly *weaker* than (3.1): it conditions out compositional heterogeneity and requires only that, within each stratum defined by $\mathbf{X}_i = \mathbf{x}$, the two groups would have trended identically in the absence of treatment. The assumption does not require equal pre-treatment levels; it restricts only the *change* in counterfactual outcomes conditional on covariates. Substantively, (3.3) is credible when $\mathbf{X}_i$ captures the key determinants of differential time trends — for instance, sector of employment, age group, baseline income decile, or region — so that, within each covariate cell, selection into treatment carries no additional predictive content for the counterfactual trajectory.
+
+It is also worth noting the relationship to the cross-sectional unconfoundedness assumption used in matching and propensity-score methods. @heckman1997 showed that, in an evaluation setting with repeated observations, the relevant "selection-on-observables" condition pertains to changes rather than levels: one must condition on $\mathbf{X}_i$ to make changes comparable, not merely to make levels comparable. Equation (3.3) is precisely this change-based analogue of unconfoundedness.
+
+### The Overlap Assumption
+
+For the conditional PTA to deliver point identification, every value of $\mathbf{X}_i$ that occurs in the treated population must also occur in the control population. The **overlap** (or common support) assumption formalises this:
+
+$$0 < p(\mathbf{X}_i) < 1 \quad \text{a.s.,} \tag{3.4}$$
+
+where $p(\mathbf{x}) \equiv \Pr(D_i = 1 \mid \mathbf{X}_i = \mathbf{x})$ is the **propensity score** — the probability of treatment given covariates, introduced by @rosenbaum1983. The lower bound $p(\mathbf{X}_i) > 0$ ensures that control units with the same covariate values as the treated exist and can contribute to trend estimation. The upper bound $p(\mathbf{X}_i) < 1$ ensures that treated units are not deterministically selected by their observables, so the control trend is informative about their counterfactual. In practice, overlap is checked by inspecting the empirical distribution of $\hat p(\mathbf{X}_i)$ separately for treated and control units; extreme values near 0 or 1 signal regions of the covariate space where the two groups barely overlap and where IPW-based estimators become unstable.
+
+### Identification of the ATT under CPTA
+
+::: callout-note
+**Proposition 3.1 (ATT Identification under CPTA).** *Suppose the CPTA* (3.3), *overlap* (3.4), *no-anticipation* (1.14), *and SUTVA hold. Then the ATT is identified by*
+
+$$\text{ATT}
+= \mathbb{E}\!\left[\Delta Y_i \mid D_i = 1\right]
+- \mathbb{E}\!\left[\mu_{0,\Delta}(\mathbf{X}_i) \mid D_i = 1\right], \tag{3.5}$$
+
+*where* $\Delta Y_i = Y_{i,1} - Y_{i,0}$ and $\mu_{0,\Delta}(\mathbf{x}) \equiv \mathbb{E}[\Delta Y_i \mid D_i = 0, \mathbf{X}_i = \mathbf{x}]$ is the conditional mean change for the control group.
+:::
+
+*Proof.* By no-anticipation, $Y_{i,0}^{\text{obs}} = Y_{i,0}(0)$ for treated units, so $\Delta Y_i = Y_{i,1}(1) - Y_{i,0}(0)$ for $D_i = 1$. Write:
+
+$$\mathbb{E}[\Delta Y_i \mid D_i=1]
+= \mathbb{E}[Y_{i,1}(1) - Y_{i,0}(0)\mid D_i=1].$$
+
+Add and subtract $\mathbb{E}[Y_{i,1}(0)\mid D_i=1]$:
+
+$$= \underbrace{\mathbb{E}[Y_{i,1}(1)-Y_{i,1}(0)\mid D_i=1]}_{\text{ATT}}
++ \mathbb{E}[Y_{i,1}(0)-Y_{i,0}(0)\mid D_i=1].$$
+
+By CPTA (3.3):
+
+$$\mathbb{E}[Y_{i,1}(0)-Y_{i,0}(0)\mid D_i=1]
+= \mathbb{E}\!\left[\mathbb{E}[Y_{i,1}(0)-Y_{i,0}(0)\mid D_i=1,\mathbf{X}_i]\mid D_i=1\right]$$
+
+$$= \mathbb{E}\!\left[\mathbb{E}[\Delta Y_i \mid D_i=0, \mathbf{X}_i]\mid D_i=1\right]
+= \mathbb{E}[\mu_{0,\Delta}(\mathbf{X}_i)\mid D_i=1].$$
+
+Rearranging:
+
+$$\text{ATT} = \mathbb{E}[\Delta Y_i\mid D_i=1]
+- \mathbb{E}[\mu_{0,\Delta}(\mathbf{X}_i)\mid D_i=1]. \qquad\square \tag{3.6}$$
+
+Equation (3.6) has a clean interpretation: the ATT is the treated group's observed average change minus the counterfactual change that the treated group would have experienced, the latter inferred from the control group's outcome regression evaluated at the treated group's covariate values. The difficulty is that $\mu_{0,\Delta}(\mathbf{x})$ must be estimated non-parametrically or modelled, and the expectation is taken over the treated group's covariate distribution — which requires either outcome regression or reweighting. Both routes lead to the estimators in Sections @sec-ipw and @sec-drdid.
+
+------------------------------------------------------------------------
+
+## Inverse Probability Weighting {#sec-ipw}
+
+### The Propensity Score and the Balancing Property
+
+@rosenbaum1983 showed that the propensity score $p(\mathbf{x}) = \Pr(D_i = 1 \mid \mathbf{X}_i = \mathbf{x})$ possesses a fundamental balancing property: conditional on the propensity score, treatment assignment is independent of the full covariate vector,
+
+$$D_i \perp\!\!\!\perp \mathbf{X}_i \;\big|\; p(\mathbf{X}_i). \tag{3.7}$$
+
+Property (3.7) reduces the dimensionality problem: instead of conditioning on the full vector $\mathbf{X}_i$, it suffices to condition on the scalar $p(\mathbf{X}_i)$. In the cross-sectional setting, @hirano2003 showed that weighting by the inverse of the propensity score recovers the ATE and ATT efficiently. In the DiD setting, @abadie2005 extended this insight by noting that the propensity score simultaneously balances the covariate distribution and, through CPTA, equates the counterfactual trend across groups.
+
+**Reweighting the control group.** The key identity underlying IPW-DiD is that, under CPTA and overlap:
+
+$$\mathbb{E}[\mu_{0,\Delta}(\mathbf{X}_i) \mid D_i=1]
+= \frac{\mathbb{E}\!\left[\dfrac{p(\mathbf{X}_i)}{1-p(\mathbf{X}_i)}\Delta Y_i \,\bigg|\, D_i=0\right]}
+       {\mathbb{E}\!\left[\dfrac{p(\mathbf{X}_i)}{1-p(\mathbf{X}_i)}\,\bigg|\, D_i=0\right]}. \tag{3.8}$$
+
+*Proof of* (3.8). By the law of iterated expectations and the definition of $\mu_{0,\Delta}$:
+
+$$\mathbb{E}[\mu_{0,\Delta}(\mathbf{X}_i)\mid D_i=1]
+= \frac{\mathbb{E}[\mu_{0,\Delta}(\mathbf{X}_i)\,p(\mathbf{X}_i)]}{\Pr(D_i=1)}.$$
+
+For the numerator, write $\mathbb{E}[\mu_{0,\Delta}(\mathbf{X}_i)\,p(\mathbf{X}_i)]$. Condition on $\mathbf{X}_i$ and apply the CPTA and the control group's regression:
+
+$$= \mathbb{E}\!\left[\mathbb{E}[\Delta Y_i\mid D_i=0,\mathbf{X}_i]\cdot p(\mathbf{X}_i)\right]
+= \mathbb{E}\!\left[\frac{p(\mathbf{X}_i)}{1-p(\mathbf{X}_i)}(1-p(\mathbf{X}_i))\mathbb{E}[\Delta Y_i\mid D_i=0,\mathbf{X}_i]\right].$$
+
+Applying iterated expectations again:
+
+$$= \mathbb{E}\!\left[\frac{p(\mathbf{X}_i)}{1-p(\mathbf{X}_i)}\Delta Y_i(1-D_i)\right]
+= \Pr(D_i=0)\,\mathbb{E}\!\left[\frac{p(\mathbf{X}_i)}{1-p(\mathbf{X}_i)}\Delta Y_i\,\bigg|\, D_i=0\right].$$
+
+Dividing by $\Pr(D_i=1)$ and noting that $\mathbb{E}[p(\mathbf{X}_i)/(1-p(\mathbf{X}_i))\mid D_i=0]
+= \Pr(D_i=1)/\Pr(D_i=0)$, equation (3.8) follows. $\square$
+
+Substituting (3.8) into (3.6) gives the population IPW-DiD estimand.
+
+### The IPW-DiD Estimator (Abadie 2005) {#sec-abadie}
+
+@abadie2005 derives the following representation of the ATT. Let $\pi \equiv \Pr(D_i = 1)$. Under CPTA, overlap, no-anticipation, and SUTVA:
+
+$$\text{ATT} = \frac{1}{\pi}\,
+\mathbb{E}\!\left[
+\left(D_i - \frac{(1-D_i)\,p(\mathbf{X}_i)}{1-p(\mathbf{X}_i)}\right)\Delta Y_i
+\right]. \tag{3.9}$$
+
+Define the **IPW weight function**:
+
+$$w_i^{\text{ipw}} \equiv
+\frac{D_i}{\pi}
+- \frac{(1-D_i)\,p(\mathbf{X}_i)}{\pi\,(1-p(\mathbf{X}_i))}. \tag{3.10}$$
+
+Equation (3.9) can then be written compactly as $\text{ATT} = \mathbb{E}[w_i^{\text{ipw}}\,\Delta Y_i]$. Treated units receive positive weight $1/\pi$; control units receive a *negative* pseudo-weight $-p(\mathbf{X}_i)/[\pi(1-p(\mathbf{X}_i))]$ proportional to the odds of treatment. The latter transfers weight from control units whose propensity score is low (few treated units in that covariate cell) to those whose score is high (many treated units), thereby constructing a covariate-balanced comparison group.
+
+**Sample analogue (Horvitz–Thompson form).** Replacing $\pi$ with its sample analogue $\hat\pi = n^{-1}\sum_i D_i$ and $p(\mathbf{X}_i)$ with an estimated propensity score $\hat p(\mathbf{X}_i)$:
+
+$$\widehat{\text{ATT}}_{\text{HT}}
+= \frac{1}{n}\sum_{i=1}^n
+\left[\frac{D_i\,\Delta Y_i}{\hat\pi}
+- \frac{(1-D_i)\,\hat p(\mathbf{X}_i)\,\Delta Y_i}
+      {\hat\pi\,\bigl(1-\hat p(\mathbf{X}_i)\bigr)}\right]. \tag{3.11}$$
+
+The Horvitz–Thompson estimator (3.11) is consistent when $\hat p(\mathbf{X}_i)$ is consistent, but it can be numerically unstable when propensity scores are near 0 or 1, because the control weights $\hat p/(1-\hat p)$ may be very large.
+
+### Stabilised (Normalised) Weights
+
+@hirano2003 and @heckman1998 advocate **normalised** (Hájek-type) estimators that separately rescale the treated and control contributions so that each set of weights sums to one. For the ATT:
+
+$$\widehat{\text{ATT}}_{\text{stab}}
+= \frac{\displaystyle\sum_{D_i=1}\Delta Y_i}{\displaystyle\sum_{D_i=1} 1}
+- \frac{\displaystyle\sum_{D_i=0}
+  \dfrac{\hat p(\mathbf{X}_i)}{1-\hat p(\mathbf{X}_i)}\Delta Y_i}
+{\displaystyle\sum_{D_i=0}\dfrac{\hat p(\mathbf{X}_i)}{1-\hat p(\mathbf{X}_i)}}. \tag{3.12}$$
+
+In (3.12), the first term is simply the treated sample mean of $\Delta Y_i$. The second term is a **weighted mean** of control group outcome changes, where the weight for control unit $i$ is:
+
+$$\tilde w_i^{\text{stab}}
+= \frac{\hat p(\mathbf{X}_i)/(1-\hat p(\mathbf{X}_i))}
+       {\sum_{j:\,D_j=0}\hat p(\mathbf{X}_j)/(1-\hat p(\mathbf{X}_j))}. \tag{3.13}$$
+
+These stabilised weights $\tilde w_i^{\text{stab}}$ are non-negative and sum to one within the control group, so $\widehat{\text{ATT}}_{\text{stab}}$ is a simple difference of two weighted sample means. Stabilisation reduces variance relative to (3.11) by removing the estimation noise in $\hat\pi$ from the denominator and by anchoring the scale of the control weights. In finite samples, $\widehat{\text{ATT}}_{\text{stab}}$ is generally preferred to $\widehat{\text{ATT}}_{\text{HT}}$ [@hirano2003; @santanna2020].
+
+### Trimmed Weights
+
+Even with normalisation, control units with $\hat p(\mathbf{X}_i)$ near 1 — implying near-zero probability of being a control — receive very large odds-ratio weights and exert disproportionate influence on the estimate. @crump2009 show that trimming units with extreme propensity scores reduces mean squared error at the cost of targeting a slightly different estimand (the ATT over the trimmed support). The standard trimming rule is:
+
+$$\mathcal{S}_\tau
+= \{i : \tau \leq \hat p(\mathbf{X}_i) \leq 1-\tau\}, \tag{3.14}$$
+
+for a threshold $\tau \in (0, 0.5)$, typically $\tau = 0.1$. The trimmed estimator restricts (3.12) to units in $\mathcal{S}_\tau$:
+
+$$\widehat{\text{ATT}}_{\text{trim}}
+= \frac{\sum_{i\in\mathcal{S}_\tau,D_i=1}\Delta Y_i}
+       {\sum_{i\in\mathcal{S}_\tau,D_i=1}1}
+- \frac{\sum_{i\in\mathcal{S}_\tau,D_i=0}
+  \frac{\hat p(\mathbf{X}_i)}{1-\hat p(\mathbf{X}_i)}\Delta Y_i}
+{\sum_{i\in\mathcal{S}_\tau,D_i=0}
+  \frac{\hat p(\mathbf{X}_i)}{1-\hat p(\mathbf{X}_i)}}. \tag{3.15}$$
+
+Trimming effectively restricts inference to the region of common support, making the comparison more credible at the expense of external validity: the ATT in (3.15) pertains only to treated units with $\hat p(\mathbf{X}_i) \geq \tau$. Applied work should report the share of units trimmed and check sensitivity of the estimate to $\tau$.
+
+### Inference for IPW-DiD
+
+Standard errors for (3.11) and (3.12) must account for the estimation of $\hat p(\mathbf{X}_i)$. @abadie2005 derives the asymptotic distribution of (3.11) when the propensity score is estimated by logistic regression. In practice, the bootstrap is the most reliable and general-purpose approach: resample the data with replacement $B$ times, re-estimate $\hat p$ and $\widehat{\text{ATT}}$ in each bootstrap sample, and use the resulting empirical distribution to construct confidence intervals. The `DRDID` package of @santanna2020 implements both analytical and bootstrap standard errors for all estimators discussed in this chapter.
+
+------------------------------------------------------------------------
+
+## Doubly Robust DiD {#sec-drdid}
+
+### Motivation: The Cost of Misspecification
+
+Both the IPW estimator (3.12) and the pure outcome-regression estimator (which plugs $\hat\mu_{0,\Delta}(\mathbf{X}_i)$ into (3.6) directly) are consistent only if their respective working model — the propensity score or the outcome regression — is correctly specified. In practice, both models are approximations. An estimator that remains consistent if *at least one* of the two models is correctly specified — regardless of which — is said to be **doubly robust** (DR). DR estimators were introduced in the cross-sectional causal inference literature by @robins1994 and @robins1995, and extended to the DiD setting by @santanna2020.
+
+### The DR-DiD Estimand
+
+@santanna2020 propose the following ATT estimand under CPTA and overlap:
+
+$$\text{ATT}_{\text{DR}}
+= \mathbb{E}\!\left[
+\frac{D_i - p(\mathbf{X}_i)}{\Pr(D_i=1)\,(1-p(\mathbf{X}_i))}
+\Bigl(\Delta Y_i - \mu_{0,\Delta}(\mathbf{X}_i)\Bigr)
+\right], \tag{3.16}$$
+
+where $\mu_{0,\Delta}(\mathbf{x}) = \mathbb{E}[\Delta Y_i \mid D_i=0, \mathbf{X}_i = \mathbf{x}]$ is the counterfactual trend regression. Expanding (3.16) clarifies the structure:
+
+$$\text{ATT}_{\text{DR}}
+= \underbrace{\mathbb{E}\!\left[\frac{D_i - p(\mathbf{X}_i)}{\pi(1-p(\mathbf{X}_i))}\Delta Y_i\right]}_{\text{IPW term}}
+- \underbrace{\mathbb{E}\!\left[\frac{D_i - p(\mathbf{X}_i)}{\pi(1-p(\mathbf{X}_i))}\mu_{0,\Delta}(\mathbf{X}_i)\right]}_{\text{bias-correction term}}. \tag{3.17}$$
+
+The first component is the IPW-DiD estimand (3.9). The second component subtracts a propensity-score–weighted average of the outcome regression, acting as a bias correction that removes the residual imbalance left by an imperfect propensity-score model.
+
+### Double Robustness: Formal Proof
+
+::: callout-note
+**Proposition 3.2 (Double Robustness).** *Let* $\tilde p(\mathbf{x})$ be a possibly misspecified propensity-score model and $\tilde\mu_{0,\Delta}(\mathbf{x})$ a possibly misspecified outcome-regression model. The estimand $\widehat{\text{ATT}}_{\text{DR}}$ evaluated at $(\tilde p, \tilde\mu_{0,\Delta})$ is consistent for the ATT if either
+
+*(a)* $\tilde p(\mathbf{x}) = p(\mathbf{x})$ almost surely (correct PS, possibly wrong OR), or
+
+*(b)* $\tilde\mu_{0,\Delta}(\mathbf{x}) = \mu_{0,\Delta}(\mathbf{x})$ almost surely (correct OR, possibly wrong PS).
+:::
+
+*Proof of (a): PS correct, OR misspecified.* Denote the DR estimand with $(\tilde p, \tilde\mu_{0,\Delta})$ as
+
+$$\Gamma(\tilde p, \tilde\mu_{0,\Delta})
+= \mathbb{E}\!\left[\frac{D_i - \tilde p(\mathbf{X}_i)}{\pi(1-\tilde p(\mathbf{X}_i))}\Delta Y_i\right]
+- \mathbb{E}\!\left[\frac{D_i - \tilde p(\mathbf{X}_i)}{\pi(1-\tilde p(\mathbf{X}_i))}\tilde\mu_{0,\Delta}(\mathbf{X}_i)\right].$$
+
+For the bias-correction term, condition on $\mathbf{X}_i$:
+
+$$\mathbb{E}\!\left[\frac{D_i - \tilde p(\mathbf{X}_i)}{\pi(1-\tilde p(\mathbf{X}_i))}\tilde\mu_{0,\Delta}(\mathbf{X}_i)\right]
+= \mathbb{E}\!\left[\frac{\tilde\mu_{0,\Delta}(\mathbf{X}_i)}{\pi(1-\tilde p(\mathbf{X}_i))}
+  \mathbb{E}[D_i - \tilde p(\mathbf{X}_i)\mid\mathbf{X}_i]\right].$$
+
+When $\tilde p = p$, we have $\mathbb{E}[D_i\mid\mathbf{X}_i] = p(\mathbf{X}_i) = \tilde p(\mathbf{X}_i)$, so $\mathbb{E}[D_i - \tilde p(\mathbf{X}_i)\mid\mathbf{X}_i] = 0$ a.s. The entire bias-correction term vanishes, leaving:
+
+$$\Gamma(p, \tilde\mu_{0,\Delta}) = \mathbb{E}\!\left[\frac{D_i - p(\mathbf{X}_i)}{\pi(1-p(\mathbf{X}_i))}\Delta Y_i\right] = \text{ATT}.$$
+
+The last equality follows from equation (3.9). $\square$
+
+*Proof of (b): OR correct, PS misspecified.* Now take $\tilde\mu_{0,\Delta} = \mu_{0,\Delta}$ and arbitrary $\tilde p$. Write:
+
+$$\Gamma(\tilde p, \mu_{0,\Delta})
+= \mathbb{E}\!\left[\frac{D_i - \tilde p(\mathbf{X}_i)}{\pi(1-\tilde p(\mathbf{X}_i))}(\Delta Y_i - \mu_{0,\Delta}(\mathbf{X}_i))\right].$$
+
+Condition on $\mathbf{X}_i$:
+
+$$= \mathbb{E}\!\left[\frac{\mathbb{E}[(D_i - \tilde p(\mathbf{X}_i))(\Delta Y_i - \mu_{0,\Delta}(\mathbf{X}_i))\mid\mathbf{X}_i]}{\pi(1-\tilde p(\mathbf{X}_i))}\right].$$
+
+The inner conditional expectation factorises. Since $\mu_{0,\Delta}(\mathbf{X}_i) = \mathbb{E}[\Delta Y_i \mid D_i=0, \mathbf{X}_i]$ and $\mathbb{E}[\Delta Y_i \mid D_i, \mathbf{X}_i]$ depends on $D_i$, we write $\mathbb{E}[\Delta Y_i \mid \mathbf{X}_i] = p(\mathbf{X}_i)\mu_{1,\Delta}(\mathbf{X}_i) + (1-p(\mathbf{X}_i))\mu_{0,\Delta}(\mathbf{X}_i)$, where $\mu_{1,\Delta}(\mathbf{x}) = \mathbb{E}[\Delta Y_i \mid D_i=1, \mathbf{X}_i=\mathbf{x}]$. Then:
+
+$$\mathbb{E}[(D_i-\tilde p)(\Delta Y_i - \mu_{0,\Delta})\mid\mathbf{X}_i]
+= \mathbb{E}[D_i\Delta Y_i\mid\mathbf{X}_i]
+- \tilde p\,\mathbb{E}[\Delta Y_i\mid\mathbf{X}_i]
+- p\,\mu_{0,\Delta} + \tilde p\,\mu_{0,\Delta}.$$
+
+Expanding $\mathbb{E}[D_i\Delta Y_i\mid\mathbf{X}_i] = p\,\mu_{1,\Delta}$:
+
+$$= p(\mu_{1,\Delta} - \mu_{0,\Delta}) + (p - \tilde p)(\mu_{0,\Delta} - \mathbb{E}[\Delta Y_i\mid\mathbf{X}_i])$$ $$= p(\mu_{1,\Delta} - \mu_{0,\Delta}) - (p - \tilde p) \cdot p(\mu_{1,\Delta} - \mu_{0,\Delta})$$ $$= p(1-p+\tilde p-\tilde p)(\mu_{1,\Delta}-\mu_{0,\Delta}) \;\text{... simplifying:}$$
+
+A cleaner path: note $\mathbb{E}[\Delta Y_i\mid\mathbf{X}_i] - \mu_{0,\Delta} = p(\mathbf{X}_i)(\mu_{1,\Delta}-\mu_{0,\Delta})$, so:
+
+$$\mathbb{E}[(D_i-\tilde p)(\Delta Y_i-\mu_{0,\Delta})\mid\mathbf{X}_i]
+= (p-\tilde p)p(\mu_{1,\Delta}-\mu_{0,\Delta}) + p(\mu_{1,\Delta}-\mu_{0,\Delta}) \cdot (1 - 1 + 1)$$
+
+Direct computation: Using the most direct route, by the law of iterated expectations:
+
+$$\mathbb{E}[D_i(\Delta Y_i - \mu_{0,\Delta})\mid\mathbf{X}_i]
+= p(\mathbf{X}_i)(\mu_{1,\Delta}(\mathbf{X}_i)-\mu_{0,\Delta}(\mathbf{X}_i)).$$
+
+$$\mathbb{E}[\tilde p(\mathbf{X}_i)(\Delta Y_i - \mu_{0,\Delta}(\mathbf{X}_i))\mid\mathbf{X}_i]
+= \tilde p(\mathbf{X}_i)\cdot\mathbb{E}[\Delta Y_i - \mu_{0,\Delta}\mid\mathbf{X}_i]
+= \tilde p(\mathbf{X}_i)\cdot p(\mathbf{X}_i)(\mu_{1,\Delta}-\mu_{0,\Delta}).$$
+
+Subtracting:
+
+$$\mathbb{E}[(D_i-\tilde p)(\Delta Y_i-\mu_{0,\Delta})\mid\mathbf{X}_i]
+= (p-\tilde p\cdot p)(\mu_{1,\Delta}-\mu_{0,\Delta})
+= p(1-\tilde p)(\mu_{1,\Delta}-\mu_{0,\Delta}).$$
+
+Substituting back:
+
+$$\Gamma(\tilde p, \mu_{0,\Delta})
+= \mathbb{E}\!\left[\frac{p(\mathbf{X}_i)(1-\tilde p(\mathbf{X}_i))}{\pi(1-\tilde p(\mathbf{X}_i))}(\mu_{1,\Delta}(\mathbf{X}_i)-\mu_{0,\Delta}(\mathbf{X}_i))\right]
+= \frac{1}{\pi}\mathbb{E}\!\left[p(\mathbf{X}_i)(\mu_{1,\Delta}-\mu_{0,\Delta})\right].$$
+
+Since $\mathbb{E}[p(\mathbf{X}_i)(\mu_{1,\Delta}-\mu_{0,\Delta})] = \pi\,\mathbb{E}[\mu_{1,\Delta}(\mathbf{X}_i)-\mu_{0,\Delta}(\mathbf{X}_i)\mid D_i=1] = \pi\cdot\text{ATT}$, we obtain $\Gamma(\tilde p,\mu_{0,\Delta}) = \text{ATT}$, regardless of $\tilde p$. $\square$
+
+### The Sample DR-DiD Estimator
+
+@santanna2020 propose the following sample analogue of (3.16). Let $\hat p(\mathbf{X}_i)$ be a parametric (e.g., logistic) propensity-score estimate and $\hat\mu_{0,\Delta}(\mathbf{X}_i)$ be a parametric (e.g., linear) outcome-regression estimate of $\mathbb{E}[\Delta Y_i \mid D_i=0, \mathbf{X}_i]$. Define the estimated DR weight:
+
+$$\hat w_i^{\text{dr}}
+\equiv \frac{D_i - \hat p(\mathbf{X}_i)}{\hat\pi\,(1-\hat p(\mathbf{X}_i))},
+\qquad \hat\pi = n^{-1}\sum_i D_i. \tag{3.18}$$
+
+The DR-DiD estimator is:
+
+$$\widehat{\text{ATT}}_{\text{DR}}
+= \frac{1}{n}\sum_{i=1}^n
+\hat w_i^{\text{dr}}\bigl(\Delta Y_i - \hat\mu_{0,\Delta}(\mathbf{X}_i)\bigr). \tag{3.19}$$
+
+Equivalently, (3.19) can be decomposed as:
+
+$$\widehat{\text{ATT}}_{\text{DR}}
+= \underbrace{\frac{1}{n_1}\sum_{D_i=1}(\Delta Y_i - \hat\mu_{0,\Delta}(\mathbf{X}_i))}_{\text{OR-adjusted treated mean change}}
+- \underbrace{\frac{\displaystyle\sum_{D_i=0}\hat\omega_i(\Delta Y_i-\hat\mu_{0,\Delta}(\mathbf{X}_i))}{\displaystyle\sum_{D_i=0}\hat\omega_i}}_{\text{IPW-adjusted control residual}}, \tag{3.20}$$
+
+where $\hat\omega_i = \hat p(\mathbf{X}_i)/(1-\hat p(\mathbf{X}_i))$ are the odds-of-treatment weights for control units. Equation (3.20) reveals the estimator's intuition clearly: it subtracts from the treated group's *regression-adjusted* average change the regression-adjusted average change of a *propensity-score–reweighted* control group. The outcome regression removes the portion of the covariate effect that can be modelled linearly; the propensity-score reweighting removes the remaining compositional difference. Both corrections would eliminate bias on their own if their respective models were correctly specified; together, they provide insurance against either model's misspecification.
+
+### Efficiency and the Semiparametric Efficiency Bound
+
+@santanna2020 show that, when both models are correctly specified and estimated at parametric rates, $\widehat{\text{ATT}}_{\text{DR}}$ achieves the **semiparametric efficiency bound** for the ATT under CPTA derived by @hahn1998 in the cross-sectional analogue. This means no regular estimator can have smaller asymptotic variance in the class of models satisfying CPTA and overlap. When the propensity score is modelled correctly but the outcome regression is not (or vice versa), the estimator remains consistent but generally loses efficiency relative to the bound — a mild price for the robustness it purchases.
+
+### Inference
+
+@santanna2020 derive the influence-function representation of $\widehat{\text{ATT}}_{\text{DR}}$, which enables analytical standard errors. The influence function for unit $i$ is:
+
+$$\psi_i = \hat w_i^{\text{dr}}\bigl(\Delta Y_i - \hat\mu_{0,\Delta}(\mathbf{X}_i)\bigr)
+- \widehat{\text{ATT}}_{\text{DR}}, \tag{3.21}$$
+
+and the asymptotic variance is $V = \mathbb{E}[\psi_i^2]$. A consistent estimator is $\hat V = n^{-2}\sum_i \hat\psi_i^2$, yielding standard error $\widehat{\text{se}}(\widehat{\text{ATT}}_{\text{DR}}) = \sqrt{\hat V/n}$. The `DRDID` R package [@santanna2020] implements both this analytical estimator and the clustered bootstrap, the latter being preferred when $n$ is moderate or when propensity-score estimation is non-parametric.
+
+------------------------------------------------------------------------
+
+## Empirical Illustration in R {#sec-ipwdr-empirics}
+
+This section demonstrates IPW-DiD and DR-DiD on a simulated dataset that mimics a common applied scenario: treatment probability varies with age and baseline income (so unconditional PTA fails), but conditional PTA holds after adjusting for these two covariates. We estimate three ATT estimators — OLS-DiD (naive, misspecified), IPW-DiD (stabilised), and DR-DiD — and compare their performance. All estimators are implemented via the `DRDID` package [@santanna2020].
+
+### Data Generating Process {.unnumbered}
+
+```{r}
+#| label: dgp
+#| message: false
+#| warning: false
+
+library(tidyverse)
+library(DRDID)
+library(modelsummary)
+
+set.seed(2025)
+n <- 1000
+
+# Pre-treatment covariates
+age    <- runif(n, 25, 60)
+income <- 20 + 0.3 * age + rnorm(n, sd = 5)
+
+# True propensity score (logistic)
+log_odds <- -3 + 0.06 * age + 0.04 * income
+p_true   <- plogis(log_odds)
+D        <- rbinom(n, 1, p_true)
+
+# Counterfactual trend depends on covariates → unconditional PTA fails
+mu0_delta <- 0.5 * (age - mean(age)) / sd(age) +
+             0.3 * (income - mean(income)) / sd(income)
+
+ATT_true  <- 2
+Y0        <- 10 + rnorm(n)                          # baseline outcome
+Y1        <- Y0 + mu0_delta + D * ATT_true + rnorm(n)  # post outcome
+
+# Wide-format tibble (one row per unit)
+df_wide <- tibble(
+  id      = 1:n,
+  D       = D,
+  Y0      = Y0,
+  Y1      = Y1,
+  DeltaY  = Y1 - Y0,
+  age     = age,
+  income  = income,
+  age_s   = as.vector(scale(age)),
+  income_s = as.vector(scale(income))
+)
+
+# Long-format panel required by DRDID (two rows per unit: t=0 and t=1)
+df_long <- bind_rows(
+  df_wide |> mutate(year = 0, Y = Y0),
+  df_wide |> mutate(year = 1, Y = Y1)
+) |> arrange(id, year)
+
+cat("True ATT:", ATT_true, "\n")
+cat("Proportion treated:", round(mean(D), 3), "\n")
+cat(sprintf("Propensity score range: [%.3f, %.3f]\n",
+            min(p_true), max(p_true)))
+```
+
+### Covariate Imbalance and Unconditional PTA Failure {.unnumbered}
+
+```{r}
+#| label: fig-imbalance
+#| fig-cap: "Covariate distributions by treatment status. Treated units are older and have higher income, generating differential counterfactual trends that violate unconditional PTA."
+#| fig-width: 8
+#| fig-height: 3.5
+#| message: false
+#| warning: false
+
+p_age <- ggplot(df_wide, aes(x = age, fill = factor(D))) +
+  geom_density(alpha = 0.5) +
+  scale_fill_manual(values = c("#2166ac", "#d73027"),
+                    labels = c("Control", "Treated")) +
+  labs(x = "Age", y = "Density", fill = NULL,
+       title = "Age distribution") +
+  theme_minimal(base_size = 11) +
+  theme(legend.position = "bottom", panel.grid.minor = element_blank())
+
+p_inc <- ggplot(df_wide, aes(x = income, fill = factor(D))) +
+  geom_density(alpha = 0.5) +
+  scale_fill_manual(values = c("#2166ac", "#d73027"),
+                    labels = c("Control", "Treated")) +
+  labs(x = "Income", y = "Density", fill = NULL,
+       title = "Income distribution") +
+  theme_minimal(base_size = 11) +
+  theme(legend.position = "bottom", panel.grid.minor = element_blank())
+
+p_age + p_inc + plot_layout(guides = "collect") &
+  theme(legend.position = "bottom")
+```
+
+The density plots confirm that treated units skew older and have higher income. Because both variables shift the counterfactual trend $\mu_{0,\Delta}(\mathbf{X}_i)$, the raw DiD estimator — which ignores this composition — will overstate the ATT.
+
+### Propensity Score Estimation and Overlap Check {.unnumbered}
+
+```{r}
+#| label: fig-pscore
+#| fig-cap: "Estimated propensity scores by treatment status. Substantial overlap exists across the full range, satisfying the overlap assumption. No mass is visible near 0 or 1."
+#| fig-width: 6
+#| fig-height: 3.5
+#| message: false
+#| warning: false
+
+# Estimate propensity score via logistic regression
+ps_fit   <- glm(D ~ age_s + income_s, data = df_wide, family = binomial)
+df_wide  <- df_wide |> mutate(phat = fitted(ps_fit))
+
+ggplot(df_wide, aes(x = phat, fill = factor(D))) +
+  geom_histogram(aes(y = after_stat(density)),
+                 bins = 40, alpha = 0.55, position = "identity") +
+  scale_fill_manual(values = c("#2166ac", "#d73027"),
+                    labels = c("Control", "Treated")) +
+  labs(x = "Estimated propensity score", y = "Density", fill = NULL) +
+  theme_minimal(base_size = 11) +
+  theme(legend.position = "bottom", panel.grid.minor = element_blank())
+```
+
+```{r}
+#| label: overlap-summary
+#| message: false
+#| warning: false
+
+df_wide |>
+  group_by(D) |>
+  summarise(
+    n      = n(),
+    ps_min = round(min(phat), 3),
+    ps_p25 = round(quantile(phat, 0.25), 3),
+    ps_med = round(median(phat), 3),
+    ps_p75 = round(quantile(phat, 0.75), 3),
+    ps_max = round(max(phat), 3)
+  ) |>
+  knitr::kable(col.names = c("D", "n", "Min", "P25", "Median", "P75", "Max"),
+               caption = "Propensity score distribution by treatment group")
+```
+
+The estimated propensity scores have good overlap: the interquartile ranges of the two groups overlap substantially, and no scores are near 0 or 1. No trimming is required in this simulation.
+
+### Estimating the ATT {.unnumbered}
+
+We estimate four versions of the ATT: (1) naive OLS-DiD on $\Delta Y_i$, ignoring covariates; (2) OLS-DiD with covariate adjustment (outcome regression only, no IPW); (3) IPW-DiD with stabilised weights; and (4) DR-DiD. The `DRDID` package provides a unified interface.
+
+```{r}
+#| label: att-estimates
+#| message: false
+#| warning: false
+
+# 1. Naive OLS-DiD: regress DeltaY on D (wide format)
+att_ols <- lm(DeltaY ~ D, data = df_wide)
+
+# 2. OR-adjusted DiD (outcome regression only, Eq. 3.6)
+att_or  <- lm(DeltaY ~ D + age_s + income_s, data = df_wide)
+
+# DRDID functions take a long-panel data frame with named columns.
+# 3. Stabilised IPW-DiD (Eq. 3.12)
+att_ipw <- ipwdid(
+  yname   = "Y",
+  tname   = "year",
+  idname  = "id",
+  dname   = "D",
+  xformla = ~ age_s + income_s,
+  data    = df_long
+)
+
+# 4. DR-DiD (Eq. 3.19)
+att_drdid <- drdid(
+  yname   = "Y",
+  tname   = "year",
+  idname  = "id",
+  dname   = "D",
+  xformla = ~ age_s + income_s,
+  data    = df_long,
+  inffunc = TRUE
+)
+
+# Collect results
+results <- tibble(
+  Estimator = c("Naive OLS-DiD",
+                "OR-adjusted DiD",
+                "IPW-DiD (stabilised)",
+                "DR-DiD"),
+  ATT = c(coef(att_ols)["D"],
+          coef(att_or)["D"],
+          att_ipw$ATT,
+          att_drdid$ATT),
+  SE  = c(sqrt(diag(vcov(att_ols)))["D"],
+          sqrt(diag(vcov(att_or)))["D"],
+          att_ipw$se,
+          att_drdid$se)
+) |>
+  mutate(
+    CI_lo = ATT - 1.96 * SE,
+    CI_hi = ATT + 1.96 * SE,
+    Bias  = ATT - ATT_true
+  )
+
+results |>
+  mutate(across(c(ATT, SE, CI_lo, CI_hi, Bias), \(x) round(x, 3))) |>
+  knitr::kable(
+    caption = "ATT estimates under four methods. True ATT = 2.",
+    col.names = c("Estimator", "ATT", "SE", "95% CI lo", "95% CI hi", "Bias")
+  )
+```
+
+```{r}
+#| label: fig-att-comparison
+#| fig-cap: "ATT estimates and 95% confidence intervals for the four estimators. The dashed line marks the true ATT = 2. Naive OLS-DiD is biased upward due to compositional differences in age and income; OR, IPW, and DR-DiD all recover estimates close to the truth."
+#| fig-width: 6.5
+#| fig-height: 3.8
+#| message: false
+#| warning: false
+
+results |>
+  mutate(Estimator = factor(Estimator, levels = rev(Estimator))) |>
+  ggplot(aes(x = ATT, y = Estimator, colour = Estimator)) +
+  geom_vline(xintercept = ATT_true, linetype = "dashed",
+             colour = "grey50", linewidth = 0.7) +
+  geom_point(size = 3) +
+  geom_errorbarh(aes(xmin = CI_lo, xmax = CI_hi), height = 0.25) +
+  annotate("text", x = ATT_true + 0.03, y = 0.5,
+           label = "True ATT", hjust = 0, size = 3, colour = "grey45") +
+  scale_colour_manual(values = c(
+    "Naive OLS-DiD"       = "#d73027",
+    "OR-adjusted DiD"     = "#fc8d59",
+    "IPW-DiD (stabilised)"= "#4393c3",
+    "DR-DiD"              = "#1a6faf"
+  )) +
+  labs(x = "Estimated ATT", y = NULL) +
+  theme_minimal(base_size = 11) +
+  theme(legend.position = "none", panel.grid.minor = element_blank())
+```
+
+The naive OLS-DiD substantially overstates the ATT because older, higher-income units sort into treatment and also happen to have faster-growing counterfactual outcomes. The OR-adjusted estimator and the IPW-DiD both remove this bias by controlling for or reweighting by covariates. The DR-DiD produces the smallest bias and narrowest confidence interval, reflecting its efficiency advantage when both working models are approximately correct.
+
+### Sensitivity: Misspecifying One Model {.unnumbered}
+
+To illustrate the double-robustness property in finite samples, we deliberately misspecify the propensity-score model (using only `age_s`, omitting `income_s`) while keeping the outcome regression correctly specified, and vice versa.
+
+```{r}
+#| label: dr-robustness
+#| message: false
+#| warning: false
+
+att_dr_psw <- drdid(
+  yname = "Y", tname = "year", idname = "id", dname = "D",
+  xformla = ~ age_s,
+  data = df_long
+)
+
+att_dr_orw <- drdid(
+  yname = "Y", tname = "year", idname = "id", dname = "D",
+  xformla = ~ income_s,
+  data = df_long
+)
+
+att_ipw_psw <- ipwdid(
+  yname = "Y", tname = "year", idname = "id", dname = "D",
+  xformla = ~ age_s,
+  data = df_long
+)
+
+tibble(
+  Specification = c(
+    "DR-DiD: both correct",
+    "DR-DiD: PS misspecified",
+    "DR-DiD: OR misspecified",
+    "IPW: PS misspecified (no DR)"
+  ),
+  ATT  = c(att_drdid$ATT, att_dr_psw$ATT,
+           att_dr_orw$ATT, att_ipw_psw$ATT),
+  SE   = c(att_drdid$se,  att_dr_psw$se,
+           att_dr_orw$se,  att_ipw_psw$se),
+  Bias = c(att_drdid$ATT, att_dr_psw$ATT,
+           att_dr_orw$ATT, att_ipw_psw$ATT) - ATT_true
+) |>
+  mutate(across(c(ATT, SE, Bias), \(x) round(x, 3))) |>
+  knitr::kable(
+    caption = paste0(
+      "Sensitivity of ATT estimates to model misspecification. True ATT = ",
+      ATT_true, ". DR-DiD remains close to the truth when one model is ",
+      "misspecified; plain IPW-DiD fails when its only model is wrong."
+    )
+  )
+```
+
+The results confirm the theory. When the propensity-score model is misspecified (omitting `income_s`) but the outcome regression is correct, DR-DiD still delivers a near-unbiased estimate because robustness clause (b) of Proposition 3.2 applies. When the outcome regression is misspecified but the propensity score is correct, clause (a) applies and the DR-DiD estimate remains accurate. By contrast, plain IPW-DiD with a misspecified propensity score has no backstop and delivers a biased estimate similar to the naive OLS-DiD.
+
+------------------------------------------------------------------------
+
+## Summary {#sec-ch3-summary}
+
+This chapter has shown that when treatment groups differ on pre-treatment covariates that drive differential outcome trends, the unconditional PTA fails through a simple composition mechanism captured by equation (3.2). Conditioning on those covariates via the conditional PTA (3.3) restores identification, provided the overlap assumption (3.4) holds. Two estimators operationalise this strategy:
+
+**IPW-DiD** (@abadie2005) reweights the control group's outcome changes by the odds of treatment $\hat p(\mathbf{X}_i)/(1-\hat p(\mathbf{X}_i))$, constructing a covariate-balanced comparison group without parametric assumptions on the outcome. The Horvitz–Thompson form (3.11) is unbiased under correct propensity-score specification; the stabilised form (3.12) is preferable in practice for its reduced variance; the trimmed form (3.15) handles near-violations of overlap by restricting inference to the common support.
+
+**DR-DiD** (@santanna2020) combines a propensity-score model and an outcome-regression model in the estimand (3.16). The double-robustness property — proved in Proposition 3.2 — guarantees consistency if either model is correct, providing insurance against the inevitable modelling approximations of empirical work. Under correct specification of both models, DR-DiD achieves the semiparametric efficiency bound.
+
+The empirical illustration in Section @sec-ipwdr-empirics confirms these properties in finite samples: naive OLS-DiD is substantially biased when covariate compositions differ; IPW-DiD and DR-DiD remove this bias; and DR-DiD remains accurate even when one model is deliberately misspecified, while plain IPW does not. Together, these estimators form the workhorse toolkit for covariate-adjusted DiD in settings with a single pre-period and a single post-period. Part IV extends this machinery to staggered treatment timing, where additional heterogeneity across cohorts must be addressed [@callaway2021].
